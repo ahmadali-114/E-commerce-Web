@@ -4055,46 +4055,58 @@ footer.section-footer {
 }
 
 /* ========== TRACK ORDER PAGE ========== */
-
 .tracking-header {
   background: linear-gradient(135deg, var(--off-white), var(--backgroundSecondary));
-  padding: 2rem 0;
+  padding: 3rem 0 2rem;
+  text-align: center;
+  border-bottom: 2px solid var(--borderColor);
+}
+
+.tracking-header .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--coral-accent);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 1rem 2rem;
+  background: var(--glass-white);
+  backdrop-filter: var(--blur);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--borderColor);
+  transition: var(--transition-normal);
+  margin-bottom: 1rem;
+}
+
+.tracking-header .back-link:hover {
+  background: var(--soft-mint);
+  color: white;
+  border-color: var(--soft-mint);
+  transform: translateX(-5px);
+  box-shadow: var(--shadow-hover);
 }
 
 .tracking-header h1 {
-  font-size: 2.8rem;
-  margin-top: 1rem;
+  font-size: 3.2rem;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  margin: 1rem 0 0.5rem;
 }
 
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--coral-accent);
-  font-size: 1.4rem;
-  text-decoration: none;
-  margin-bottom: 0.5rem;
-  padding: 0.8rem 1.5rem;
-  border-radius: var(--radius-full);
-  background: var(--glass-white);
-  border: 1px solid var(--borderColor);
-  transition: var(--transition-normal);
-}
-
-.back-link:hover {
-  background: var(--soft-mint);
-  color: white;
-  border-color: var(--soft-mint);
-  transform: translateX(-3px);
+*/
+.tracking-section {
+  padding: 4rem 0;
+  min-height: 60vh;
+  background: linear-gradient(135deg, var(--off-white), #f0f7f5);
 }
 
 .tracking-container {
-  min-height: 50vh;
-  padding: 2rem 0;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
 }
 
 .tracking-card {
@@ -4103,16 +4115,58 @@ footer.section-footer {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-deep);
   padding: 3rem;
-  max-width: 700px;
-  margin: 0 auto;
   border: 1px solid var(--borderColor);
   transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
 }
 
 .tracking-card:hover {
   border-color: var(--soft-mint);
   box-shadow: var(--shadow-hover);
+  transform: translateY(-5px);
 }
+
+.tracking-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--soft-mint), var(--coral-accent));
+}
+
+
+.tracking-card .tracking-header {
+  background: transparent;
+  padding: 0 0 2rem 0;
+  border-bottom: 2px solid var(--borderColor);
+  margin-bottom: 2rem;
+  text-align: left;
+  border-bottom: 2px dashed var(--borderColor);
+}
+
+.tracking-card .tracking-header h2 {
+  font-size: 2.4rem;
+  color: var(--deep-teal);
+  margin-bottom: 0.5rem;
+  background: none;
+  -webkit-text-fill-color: var(--deep-teal);
+}
+
+.order-date-tracking {
+  font-size: 1.5rem;
+  color: var(--para-color);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.order-date-tracking i {
+  color: var(--soft-mint);
+}
+
 
 .tracking-progress {
   margin: 3rem 0;
@@ -4125,90 +4179,407 @@ footer.section-footer {
 
 .progress-step {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.8rem;
   margin-bottom: 2.5rem;
   position: relative;
+  transition: var(--transition-normal);
 }
 
 .progress-step:last-child {
   margin-bottom: 0;
 }
 
+/* Connecting line */
 .progress-step:not(:last-child)::before {
   content: '';
   position: absolute;
-  left: 0.7rem;
-  top: 2.5rem;
+  left: 0.8rem;
+  top: 2.8rem;
   bottom: -2rem;
-  width: 2px;
-  background: var(--borderColor);
+  width: 3px;
+  background: linear-gradient(to bottom, var(--soft-mint), var(--coral-accent));
+  border-radius: var(--radius-full);
+  transform: scaleX(0.5);
+  transition: var(--transition-normal);
 }
 
-.progress-step.completed:not(:last-child)::before {
-  background: var(--soft-mint);
+.progress-step:hover:not(:last-child)::before {
+  transform: scaleX(1);
+  box-shadow: 0 0 8px var(--soft-mint);
 }
 
+/* Step indicator */
 .step-indicator {
-  width: 1.8rem;
+  width: 2.2rem;
   text-align: center;
   position: relative;
   z-index: 2;
 }
 
 .step-indicator i {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   color: var(--borderColor);
   background: white;
   border-radius: 50%;
-  padding: 0.2rem;
+  padding: 0.3rem;
+  transition: var(--transition-normal);
+  border: 2px solid transparent;
 }
 
 .progress-step.completed .step-indicator i {
   color: var(--soft-mint);
+  border-color: var(--soft-mint);
+  box-shadow: 0 0 12px var(--soft-mint);
+  transform: scale(1.1);
 }
 
+/* Step content */
 .step-content {
   flex: 1;
+  background: var(--glass-teal);
+  padding: 1.2rem 1.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  transition: var(--transition-normal);
+}
+
+.progress-step:hover .step-content {
+  border-color: var(--soft-mint);
+  background: white;
+  transform: translateX(5px);
+  box-shadow: var(--shadow-soft);
 }
 
 .step-content h4 {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   color: var(--deep-teal);
   margin-bottom: 0.3rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .step-content p {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   color: var(--para-color);
-  margin-bottom: 0.2rem;
 }
 
+/* ----- Delivery Info Card ----- */
 .delivery-info-tracking {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem;
   padding: 2rem;
   background: linear-gradient(135deg, var(--glass-mint), var(--glass-teal));
   border-radius: var(--radius-md);
   margin: 3rem 0 2rem;
   border: 1px solid var(--soft-mint);
+  transition: var(--transition-normal);
+}
+
+.delivery-info-tracking:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-soft);
 }
 
 .delivery-info-tracking i {
-  font-size: 3rem;
+  font-size: 4rem;
   color: var(--soft-mint);
+  background: rgba(255,255,255,0.3);
+  padding: 1rem;
+  border-radius: 50%;
+  transition: var(--transition-normal);
+}
+
+.delivery-info-tracking:hover i {
+  background: var(--soft-mint);
+  color: white;
+  transform: rotate(5deg);
 }
 
 .delivery-info-tracking h4 {
   font-size: 1.8rem;
   color: var(--deep-teal);
   margin-bottom: 0.3rem;
+  font-weight: 700;
 }
 
 .delivery-info-tracking p {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
+  color: var(--coral-accent);
+  font-weight: 600;
+}
+
+/* ----- Order Summary Section ----- */
+.order-summary-tracking {
+  margin: 3rem 0;
+  padding: 2rem;
+  background: var(--glass-teal);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--borderColor);
+}
+
+.order-summary-tracking h3 {
+  font-size: 2rem;
+  color: var(--deep-teal);
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--soft-mint);
+}
+
+.tracking-items {
+  margin-bottom: 2rem;
+}
+
+.tracking-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--borderColor);
+}
+
+.tracking-item:last-child {
+  border-bottom: none;
+}
+
+.tracking-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: white;
+  border: 1px solid var(--borderColor);
+}
+
+.tracking-item-details h4 {
+  font-size: 1.5rem;
+  color: var(--deep-teal);
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.tracking-item-details p {
+  font-size: 1.3rem;
   color: var(--para-color);
+}
+
+.tracking-item-total {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--coral-accent);
+}
+
+.tracking-totals {
+  background: var(--glass-white);
+  padding: 2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--borderColor);
+  margin-top: 2rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px dashed var(--borderColor);
+  font-size: 1.5rem;
+  color: var(--para-color);
+}
+
+.total-row:last-child {
+  border-bottom: none;
+}
+
+.total-row.grand-total {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--deep-teal);
+  padding-top: 1.5rem;
+  margin-top: 0.5rem;
+  border-top: 2px solid var(--soft-mint);
+}
+
+.total-row.grand-total span:last-child {
+  color: var(--coral-accent);
+}
+
+/* ----- Shipping Address ----- */
+.shipping-address-tracking {
+  margin: 3rem 0;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--glass-mint), var(--glass-teal));
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--coral-accent);
+}
+
+.shipping-address-tracking h4 {
+  font-size: 1.8rem;
+  color: var(--deep-teal);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.shipping-address-tracking h4 i {
+  color: var(--coral-accent);
+  font-size: 2rem;
+}
+
+.shipping-address-tracking p {
+  font-size: 1.5rem;
+  color: var(--para-color);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.shipping-address-tracking p i {
+  color: var(--soft-mint);
+  width: 2rem;
+}
+
+/* ----- Action Buttons ----- */
+.tracking-actions {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+}
+
+.tracking-actions .btn {
+  padding: 1.4rem 2.8rem;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 1.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-soft);
+  text-decoration: none;
+}
+
+.tracking-actions .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
+.tracking-actions .btn-secondary {
+  background: transparent;
+  border: 2px solid var(--soft-mint);
+  color: var(--deep-teal);
+}
+
+.tracking-actions .btn-secondary:hover {
+  background: var(--soft-mint);
+  color: white;
+}
+
+/* ----- No Order Found State ----- */
+.no-tracking {
+  text-align: center;
+  padding: 6rem 2rem;
+  background: var(--glass-white);
+  backdrop-filter: var(--blur);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--borderColor);
+}
+
+.no-tracking i {
+  font-size: 8rem;
+  color: var(--soft-mint);
+  opacity: 0.5;
+  margin-bottom: 2rem;
+}
+
+.no-tracking h2 {
+  font-size: 2.4rem;
+  color: var(--deep-teal);
+  margin-bottom: 1rem;
+}
+
+.no-tracking p {
+  font-size: 1.6rem;
+  color: var(--para-color);
+  margin-bottom: 2rem;
+}
+
+.no-tracking .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.2rem 2.5rem;
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition-normal);
+}
+
+.no-tracking .btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .tracking-card {
+    padding: 2rem;
+  }
+
+  .tracking-card .tracking-header h2 {
+    font-size: 2rem;
+  }
+
+  .progress-steps-vertical {
+    padding-left: 2rem;
+  }
+
+  .progress-step {
+    gap: 1rem;
+  }
+
+  .step-content h4 {
+    font-size: 1.6rem;
+  }
+
+  .step-content p {
+    font-size: 1.3rem;
+  }
+
+  .delivery-info-tracking {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .tracking-item {
+    grid-template-columns: 50px 1fr;
+  }
+
+  .tracking-item-total {
+    grid-column: 2 / -1;
+    text-align: right;
+  }
+}
+
+@media (max-width: 480px) {
+  .tracking-header h1 {
+    font-size: 2.4rem;
+  }
+
+  .tracking-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ========== PROFILE PAGE ========== */
