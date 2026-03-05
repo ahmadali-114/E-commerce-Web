@@ -2,6 +2,7 @@
 import { isLoggedIn, getCurrentUser, updateUserProfile, saveOrder } from '../utils/auth.js';
 import { getCartProductFromLS } from "../utils/getCartProducts.js";
 import { updateCartValue } from "../utils/updateCartValue.js";
+import { getProductById } from '../services/api.js';
 
 // ========== REDIRECT IF NOT LOGGED IN ==========
 if (!isLoggedIn()) {
@@ -15,24 +16,66 @@ if (cartProducts.length === 0) {
   window.location.href = 'addToCart.html';
 }
 
-// Import product data (adjust path as needed)
-import products from "../data/products.json";
+// ========== LOAD PRODUCT DETAILS FROM API ==========
+let cartItems = [];
+let isLoading = true;
 
-// Enrich cart items with full product details
-const cartItems = cartProducts.map(cartItem => {
-  const product = products.find(p => p.id === cartItem.id);
-  return {
-    id: product.id,
-    name: product.name,
-    price: product.price,
-    image: product.image,
-    quantity: cartItem.quantity
-  };
-});
+// Show loading state
+function showLoading() {
+  const container = document.getElementById('checkoutItems');
+  if (container) {
+    container.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin fa-3x"></i><p>Loading cart items...</p></div>';
+  }
+}
+
+// Load product details for each cart item
+async function loadCartItems() {
+  try {
+    showLoading();
+    cartItems = [];
+    
+    for (const cartItem of cartProducts) {
+      try {
+        const product = await getProductById(cartItem.id);
+        if (product) {
+          cartItems.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: cartItem.quantity
+          });
+        }
+      } catch (err) {
+        console.error(`Error loading product ${cartItem.id}:`, err);
+      }
+    }
+    
+    console.log("Cart items loaded:", cartItems);
+    isLoading = false;
+    displayCheckoutItems();
+    
+  } catch (error) {
+    console.error("Error loading cart items:", error);
+    isLoading = false;
+    const container = document.getElementById('checkoutItems');
+    if (container) {
+      container.innerHTML = '<div class="error-message">Error loading cart items. Please try again.</div>';
+    }
+  }
+}
 
 // ========== DISPLAY ORDER SUMMARY ==========
 function displayCheckoutItems() {
   const container = document.getElementById('checkoutItems');
+  
+  if (!container) return;
+  
+  if (cartItems.length === 0) {
+    container.innerHTML = '<p>No items in cart</p>';
+    return;
+  }
+
   let subtotal = 0;
   let html = '';
 
@@ -43,12 +86,12 @@ function displayCheckoutItems() {
     html += `
       <div class="checkout-item">
         <div class="item-image">
-          <img src="${item.image}" alt="${item.name}">
+          <img src="${item.image || 'https://via.placeholder.com/60'}" alt="${item.name}">
           <span class="item-quantity">${item.quantity}x</span>
         </div>
         <div class="item-details">
           <h4>${item.name}</h4>
-          <p class="item-price">₹${item.price.toLocaleString()} each</p>
+          <p class="item-price">₹${Number(item.price).toLocaleString()} each</p>
         </div>
         <div class="item-total">₹${itemTotal.toLocaleString()}</div>
       </div>
@@ -61,10 +104,15 @@ function displayCheckoutItems() {
   const shipping = subtotal > 1000 ? 0 : 100;
   const total = subtotal + tax + shipping;
 
-  document.getElementById('checkoutSubtotal').textContent = `₹${subtotal.toLocaleString()}`;
-  document.getElementById('shippingCost').textContent = shipping === 0 ? 'Free' : `₹${shipping}`;
-  document.getElementById('checkoutTax').textContent = `₹${tax}`;
-  document.getElementById('checkoutTotal').textContent = `₹${total.toLocaleString()}`;
+  const subtotalEl = document.getElementById('checkoutSubtotal');
+  const shippingEl = document.getElementById('shippingCost');
+  const taxEl = document.getElementById('checkoutTax');
+  const totalEl = document.getElementById('checkoutTotal');
+  
+  if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
+  if (shippingEl) shippingEl.textContent = shipping === 0 ? 'Free' : `₹${shipping}`;
+  if (taxEl) taxEl.textContent = `₹${tax}`;
+  if (totalEl) totalEl.textContent = `₹${total.toLocaleString()}`;
 
   return { subtotal, tax, shipping, total };
 }
@@ -75,14 +123,16 @@ function setupPaymentMethods() {
   const cardForm = document.getElementById('cardPaymentForm');
   const easypaisaForm = document.getElementById('easypaisaForm');
 
+  if (!paymentRadios.length) return;
+
   paymentRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
-      cardForm.style.display = 'none';
-      easypaisaForm.style.display = 'none';
+      if (cardForm) cardForm.style.display = 'none';
+      if (easypaisaForm) easypaisaForm.style.display = 'none';
 
-      if (e.target.value === 'card') {
+      if (e.target.value === 'card' && cardForm) {
         cardForm.style.display = 'block';
-      } else if (e.target.value === 'easypaisa') {
+      } else if (e.target.value === 'easypaisa' && easypaisaForm) {
         easypaisaForm.style.display = 'block';
       }
     });
@@ -136,35 +186,32 @@ function prefillUserData() {
   const user = getCurrentUser();
   if (!user) return;
 
-  if (document.getElementById('fullName')) {
+  const fullNameEl = document.getElementById('fullName');
+  const emailEl = document.getElementById('email');
+  const phoneEl = document.getElementById('phone');
+  const addressEl = document.getElementById('address');
+  const cityEl = document.getElementById('city');
+  const provinceEl = document.getElementById('province');
+
+  if (fullNameEl) {
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    document.getElementById('fullName').value = fullName;
+    fullNameEl.value = fullName;
   }
-  if (document.getElementById('email')) {
-    document.getElementById('email').value = user.email || '';
-  }
-  if (document.getElementById('phone')) {
-    document.getElementById('phone').value = user.phone || '';
-  }
-  if (document.getElementById('address')) {
-    document.getElementById('address').value = user.address || '';
-  }
-  if (document.getElementById('city')) {
-    document.getElementById('city').value = user.city || '';
-  }
-  if (document.getElementById('province')) {
-    document.getElementById('province').value = user.province || '';
-  }
+  if (emailEl) emailEl.value = user.email || '';
+  if (phoneEl) phoneEl.value = user.phone || '';
+  if (addressEl) addressEl.value = user.address || '';
+  if (cityEl) cityEl.value = user.city || '';
+  if (provinceEl) provinceEl.value = user.province || '';
 }
 
 // ========== VALIDATE FORM ==========
 function validateForm() {
-  const fullName = document.getElementById('fullName').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const address = document.getElementById('address').value.trim();
-  const city = document.getElementById('city').value.trim();
-  const province = document.getElementById('province').value;
+  const fullName = document.getElementById('fullName')?.value.trim();
+  const email = document.getElementById('email')?.value.trim();
+  const phone = document.getElementById('phone')?.value.trim();
+  const address = document.getElementById('address')?.value.trim();
+  const city = document.getElementById('city')?.value.trim();
+  const province = document.getElementById('province')?.value;
   const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
 
   if (!fullName || !email || !phone || !address || !city || !province || !paymentMethod) {
@@ -188,10 +235,10 @@ function validateForm() {
 
   // Validate card if selected
   if (paymentMethod === 'card') {
-    const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
-    const expiry = document.getElementById('expiryDate').value;
-    const cvv = document.getElementById('cvv').value;
-    const cardName = document.getElementById('cardName').value.trim();
+    const cardNumber = document.getElementById('cardNumber')?.value.replace(/\s/g, '');
+    const expiry = document.getElementById('expiryDate')?.value;
+    const cvv = document.getElementById('cvv')?.value;
+    const cardName = document.getElementById('cardName')?.value.trim();
 
     if (!cardNumber || !expiry || !cvv || !cardName) {
       alert('Please fill in all card details');
@@ -205,7 +252,6 @@ function validateForm() {
       alert('Please enter a valid 3-digit CVV');
       return false;
     }
-    // Simple expiry check (MM/YY)
     if (!/^\d{2}\/\d{2}$/.test(expiry)) {
       alert('Please enter expiry in MM/YY format');
       return false;
@@ -214,8 +260,8 @@ function validateForm() {
 
   // Validate EasyPaisa if selected
   if (paymentMethod === 'easypaisa') {
-    const mobile = document.getElementById('mobileNumber').value;
-    const otp = document.getElementById('otp').value;
+    const mobile = document.getElementById('mobileNumber')?.value;
+    const otp = document.getElementById('otp')?.value;
     if (!mobile || !otp) {
       alert('Please enter mobile number and OTP');
       return false;
@@ -234,107 +280,119 @@ function validateForm() {
 }
 
 // ========== PLACE ORDER ==========
-function placeOrder() {
+async function placeOrder() {
   if (!validateForm()) return;
 
-  const fullName = document.getElementById('fullName').value.trim();
-  const nameParts = fullName.split(' ');
-  const firstName = nameParts[0] || '';
-  const lastName = nameParts.slice(1).join(' ') || '';
+  const placeOrderBtn = document.getElementById('placeOrderBtn');
+  const originalText = placeOrderBtn.innerHTML;
+  
+  // Disable button and show loading
+  placeOrderBtn.disabled = true;
+  placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+  try {
+    const fullName = document.getElementById('fullName').value.trim();
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
 
-  // Prepare address object
-  const addressObj = {
-    street: document.getElementById('address').value.trim(),
-    city: document.getElementById('city').value.trim(),
-    province: document.getElementById('province').value,
-    postalCode: document.getElementById('postalCode')?.value.trim() || ''
-  };
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
-  // Update user profile with address if logged in
-  if (isLoggedIn()) {
-    updateUserProfile({
-      firstName,
-      lastName,
-      phone: document.getElementById('phone').value.trim(),
-      address: addressObj.street,
+    // Prepare address object
+    const addressObj = {
+      street: document.getElementById('address').value.trim(),
+      city: document.getElementById('city').value.trim(),
+      province: document.getElementById('province').value,
+      postalCode: document.getElementById('postalCode')?.value.trim() || ''
+    };
+
+    // Calculate totals
+    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = 50;
+    const shipping = subtotal > 1000 ? 0 : 100;
+    const total = subtotal + tax + shipping;
+
+    // Build order data
+    const orderData = {
+      items: cartItems.map(item => ({
+        productId: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image
+      })),
+      subtotal,
+      tax,
+      shipping,
+      total,
+      shippingAddress: addressObj.street,
       city: addressObj.city,
-      province: addressObj.province
-    });
-  }
+      province: addressObj.province,
+      postalCode: addressObj.postalCode,
+      paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' :
+                      paymentMethod === 'card' ? 'Credit/Debit Card' : 'EasyPaisa/JazzCash',
+      notes: document.getElementById('orderNotes')?.value.trim() || ''
+    };
 
-  // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = 50;
-  const shipping = subtotal > 1000 ? 0 : 100;
-  const total = subtotal + tax + shipping;
+    // Save order using API
+    const result = await saveOrder(orderData);
 
-  // Build order data for saveOrder
-  const orderData = {
-    items: cartItems.map(item => ({
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      image: item.image
-    })),
-    subtotal,
-    tax,
-    shipping,
-    total,
-    address: {
-      fullName,
-      email: document.getElementById('email').value.trim(),
-      phone: document.getElementById('phone').value.trim(),
-      ...addressObj
-    },
-    paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery' :
-                    paymentMethod === 'card' ? 'Credit/Debit Card' : 'EasyPaisa/JazzCash',
-    notes: document.getElementById('orderNotes')?.value.trim() || ''
-  };
+    if (result.success) {
+      // Clear cart
+      localStorage.removeItem('cartProductLS');
+      updateCartValue([]);
 
-  // Save order using auth.js
-  const result = saveOrder(orderData);
-
-  if (result.success) {
-    // Clear cart
-    localStorage.removeItem('cartProductLS');
-    updateCartValue([]);
-
-    // Show confirmation modal
-    showOrderConfirmation(result.orderId, orderData);
-  } else {
-    alert('Failed to place order: ' + result.message);
+      // Show confirmation modal
+      showOrderConfirmation(result.orderId || 'ORD-' + Date.now(), orderData);
+    } else {
+      alert('Failed to place order: ' + result.message);
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.innerHTML = originalText;
+    }
+  } catch (error) {
+    console.error('Order error:', error);
+    alert('An error occurred. Please try again.');
+    placeOrderBtn.disabled = false;
+    placeOrderBtn.innerHTML = originalText;
   }
 }
 
 // ========== SHOW CONFIRMATION MODAL ==========
 function showOrderConfirmation(orderId, orderData) {
   const modal = document.getElementById('orderModal');
-  document.getElementById('orderNumber').textContent = orderId;
-  document.getElementById('orderPayment').textContent = orderData.paymentMethod;
-  document.getElementById('orderAmount').textContent = `₹${orderData.total.toLocaleString()}`;
-  document.getElementById('orderAddress').textContent =
-    `${orderData.address.street}, ${orderData.address.city}, ${orderData.address.province}`;
+  const orderNumberEl = document.getElementById('orderNumber');
+  const orderPaymentEl = document.getElementById('orderPayment');
+  const orderAmountEl = document.getElementById('orderAmount');
+  const orderAddressEl = document.getElementById('orderAddress');
+  const orderMessageEl = document.getElementById('orderMessage');
 
-  if (orderData.paymentMethod === 'Cash on Delivery') {
-    document.getElementById('orderMessage').textContent =
-      'Your order has been confirmed! Pay when you receive your items.';
-  } else {
-    document.getElementById('orderMessage').textContent =
-      'Payment successful! Your order has been confirmed.';
+  if (orderNumberEl) orderNumberEl.textContent = orderId;
+  if (orderPaymentEl) orderPaymentEl.textContent = orderData.paymentMethod;
+  if (orderAmountEl) orderAmountEl.textContent = `₹${orderData.total.toLocaleString()}`;
+  if (orderAddressEl) {
+    orderAddressEl.textContent = `${orderData.shippingAddress}, ${orderData.city}, ${orderData.province}`;
+  }
+  if (orderMessageEl) {
+    orderMessageEl.textContent = orderData.paymentMethod === 'Cash on Delivery' 
+      ? 'Your order has been confirmed! Pay when you receive your items.'
+      : 'Payment successful! Your order has been confirmed.';
   }
 
-  modal.style.display = 'flex';
+  if (modal) modal.style.display = 'flex';
 }
 
 // ========== INITIALIZE ==========
 document.addEventListener('DOMContentLoaded', () => {
-  const totals = displayCheckoutItems();
-  setupPaymentMethods();
-  prefillUserData();
+  // Load cart items first
+  loadCartItems().then(() => {
+    setupPaymentMethods();
+    prefillUserData();
+  });
 
-  document.getElementById('placeOrderBtn').addEventListener('click', placeOrder);
+  const placeOrderBtn = document.getElementById('placeOrderBtn');
+  if (placeOrderBtn) {
+    placeOrderBtn.addEventListener('click', placeOrder);
+  }
 });
 
 // Close modal on outside click

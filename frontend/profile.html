@@ -108,7 +108,7 @@
                 <input type="text" id="city" class="form-input">
               </div>
 
-              <button type="submit" class="save-btn">Save Changes</button>
+              <button type="submit" class="save-btn" id="saveProfileBtn">Save Changes</button>
             </form>
             <div id="profileMessage" class="profile-message"></div>
           </div>
@@ -120,8 +120,7 @@
               <!-- Orders will be loaded here -->
               <div class="no-orders">
                 <i class="fas fa-box-open"></i>
-                <p>No orders yet</p>
-                <a href="products.html" class="btn">Start Shopping</a>
+                <p>Loading orders...</p>
               </div>
             </div>
           </div>
@@ -146,17 +145,17 @@
               <form id="passwordForm">
                 <div class="form-group">
                   <label for="currentPassword">Current Password</label>
-                  <input type="password" id="currentPassword" class="form-input">
+                  <input type="password" id="currentPassword" class="form-input" required>
                 </div>
                 <div class="form-group">
                   <label for="newPassword">New Password</label>
-                  <input type="password" id="newPassword" class="form-input">
+                  <input type="password" id="newPassword" class="form-input" required>
                 </div>
                 <div class="form-group">
                   <label for="confirmNewPassword">Confirm New Password</label>
-                  <input type="password" id="confirmNewPassword" class="form-input">
+                  <input type="password" id="confirmNewPassword" class="form-input" required>
                 </div>
-                <button type="submit" class="save-btn">Update Password</button>
+                <button type="submit" class="save-btn" id="changePasswordBtn">Update Password</button>
               </form>
               <div id="passwordMessage" class="profile-message"></div>
             </div>
@@ -181,8 +180,25 @@
       isLoggedIn, 
       logout, 
       updateUserProfile,
-      getUserOrders 
-    } from './src/utils/auth.js';  // updated path
+      getUserOrders,
+      getToken
+    } from './src/utils/auth.js';
+
+    // ========== API HELPER ==========
+    const API_URL = 'http://localhost:5000/api';
+
+    async function fetchWithAuth(endpoint, options = {}) {
+      const token = getToken();
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...options.headers
+        }
+      });
+      return response;
+    }
 
     // ========== TAB SWITCHING ==========
     window.showTab = (tabName, element) => {
@@ -200,82 +216,82 @@
       }
     };
 
-    // ========== LOAD ORDERS ==========
-    function loadOrders() {
+    // ========== LOAD ORDERS FROM BACKEND ==========
+    async function loadOrders() {
       const ordersList = document.getElementById('ordersList');
       if (!ordersList) return;
 
-      const orders = getUserOrders();
-      if (orders.length === 0) {
+      try {
+        const orders = await getUserOrders();
+        
+        if (!orders || orders.length === 0) {
+          ordersList.innerHTML = `
+            <div class="no-orders">
+              <i class="fas fa-box-open"></i>
+              <p>No orders yet</p>
+              <a href="products.html" class="btn">Start Shopping</a>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        orders.forEach(order => {
+          const date = new Date(order.date).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          });
+
+          const itemsHtml = order.items?.map(item => `
+            <div class="order-item">
+              <img src="${item.image || 'https://via.placeholder.com/50'}" alt="${item.name}" class="order-item-image">
+              <div class="order-item-details">
+                <h5>${item.name}</h5>
+                <div class="order-item-meta">
+                  <span><i class="fas fa-tag"></i> ₹${item.price}</span>
+                  <span><i class="fas fa-times"></i> ${item.quantity}</span>
+                </div>
+              </div>
+              <div class="order-item-total">₹${item.price * item.quantity}</div>
+            </div>
+          `).join('') || '<p>No items</p>';
+
+          html += `
+            <div class="order-card">
+              <div class="order-header">
+                <div class="order-info">
+                  <h4>Order #${order.id}</h4>
+                  <div class="order-date"><i class="far fa-calendar-alt"></i> ${date}</div>
+                </div>
+                <span class="order-status ${order.status?.toLowerCase() || 'processing'}">${order.status || 'Processing'}</span>
+              </div>
+              <div class="order-items">
+                ${itemsHtml}
+              </div>
+              <div class="order-footer">
+                <div class="order-summary">
+                  <span class="summary-row">Total: ₹${order.total || 0}</span>
+                </div>
+                <div class="order-actions">
+                  <a href="track-order.html?id=${order.id}" class="track-order-btn"><i class="fas fa-truck"></i> Track</a>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        ordersList.innerHTML = html;
+
+      } catch (error) {
+        console.error('Error loading orders:', error);
         ordersList.innerHTML = `
           <div class="no-orders">
-            <i class="fas fa-box-open"></i>
-            <p>No orders yet</p>
-            <a href="products.html" class="btn">Start Shopping</a>
+            <i class="fas fa-exclamation-circle"></i>
+            <p>Error loading orders</p>
+            <button class="btn" onclick="loadOrders()">Try Again</button>
           </div>
         `;
-        return;
       }
-
-      let html = '';
-      orders.forEach(order => {
-        const date = new Date(order.date).toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
-        });
-
-        const itemsHtml = order.items.map(item => `
-          <div class="order-item">
-            <img src="${item.image || 'https://via.placeholder.com/50'}" alt="${item.name}" class="order-item-image">
-            <div class="order-item-details">
-              <h5>${item.name}</h5>
-              <div class="order-item-meta">
-                <span><i class="fas fa-tag"></i> ₹${item.price}</span>
-                <span><i class="fas fa-times"></i> ${item.quantity}</span>
-              </div>
-            </div>
-            <div class="order-item-total">₹${item.price * item.quantity}</div>
-          </div>
-        `).join('');
-
-        html += `
-          <div class="order-card">
-            <div class="order-header">
-              <div class="order-info">
-                <h4>Order #${order.id}</h4>
-                <div class="order-date"><i class="far fa-calendar-alt"></i> ${date}</div>
-              </div>
-              <span class="order-status ${order.status.toLowerCase()}">${order.status}</span>
-            </div>
-            <div class="order-items">
-              ${itemsHtml}
-            </div>
-            <div class="order-footer">
-              <div class="order-summary">
-                <span class="summary-row">Subtotal: ₹${order.subtotal}</span>
-                <span class="summary-row">Tax: ₹${order.tax}</span>
-                <span class="summary-row">Shipping: ₹${order.shipping}</span>
-                <span class="summary-row total">Total: ₹${order.total}</span>
-              </div>
-              <div class="order-actions">
-                <a href="track-order.html?id=${order.id}" class="track-order-btn"><i class="fas fa-truck"></i> Track</a>
-                <button class="reorder-btn" data-order='${JSON.stringify(order).replace(/'/g, "&#39;")}'><i class="fas fa-redo-alt"></i> Reorder</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      ordersList.innerHTML = html;
-
-      // Add reorder functionality (placeholder)
-      document.querySelectorAll('.reorder-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          alert('Reorder feature – add items to cart (implement your cart logic)');
-          // You can add cart logic here
-        });
-      });
     }
 
     // ========== AUTH CHECK & PROFILE LOAD ==========
@@ -283,6 +299,7 @@
       window.location.href = 'login.html';
     }
 
+    // Load user data
     const user = getCurrentUser();
     if (user) {
       document.getElementById('profileName').textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
@@ -300,23 +317,45 @@
     }
 
     // ========== PROFILE UPDATE ==========
-    document.getElementById('profileForm').addEventListener('submit', (e) => {
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-
-      const result = updateUserProfile({
-        firstName: document.getElementById('firstName').value,
-        lastName: document.getElementById('lastName').value,
-        phone: document.getElementById('phone').value,
-        address: document.getElementById('address').value,
-        city: document.getElementById('city').value
-      });
-
+      
+      const saveBtn = document.getElementById('saveProfileBtn');
       const messageDiv = document.getElementById('profileMessage');
-      if (result.success) {
-        messageDiv.innerHTML = '<div class="success-message">Profile updated successfully!</div>';
-        setTimeout(() => messageDiv.innerHTML = '', 3000);
-      } else {
-        messageDiv.innerHTML = `<div class="error-message">${result.message}</div>`;
+      
+      // Disable button and show loading
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span>Saving...</span> <i class="fas fa-spinner fa-spin"></i>';
+      messageDiv.innerHTML = '';
+
+      try {
+        const result = await updateUserProfile({
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          phone: document.getElementById('phone').value,
+          address: document.getElementById('address').value,
+          city: document.getElementById('city').value
+        });
+
+        if (result.success) {
+          messageDiv.innerHTML = '<div class="success-message">Profile updated successfully!</div>';
+          
+          // Update displayed name
+          const user = getCurrentUser();
+          if (user) {
+            document.getElementById('profileName').textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
+          }
+          
+          setTimeout(() => messageDiv.innerHTML = '', 3000);
+        } else {
+          messageDiv.innerHTML = `<div class="error-message">${result.message}</div>`;
+        }
+      } catch (error) {
+        messageDiv.innerHTML = '<div class="error-message">An error occurred. Please try again.</div>';
+      } finally {
+        // Re-enable button
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = 'Save Changes';
       }
     });
 
@@ -326,13 +365,61 @@
       window.location.href = 'index.html';
     });
 
-    // ========== PASSWORD CHANGE (placeholder) ==========
-    document.getElementById('passwordForm').addEventListener('submit', (e) => {
+    // ========== PASSWORD CHANGE ==========
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmNewPassword = document.getElementById('confirmNewPassword').value;
       const msgDiv = document.getElementById('passwordMessage');
-      msgDiv.innerHTML = '<div class="success-message">Password updated (demo only).</div>';
-      setTimeout(() => msgDiv.innerHTML = '', 3000);
+      const changeBtn = document.getElementById('changePasswordBtn');
+
+      // Validation
+      if (newPassword !== confirmNewPassword) {
+        msgDiv.innerHTML = '<div class="error-message">New passwords do not match</div>';
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        msgDiv.innerHTML = '<div class="error-message">Password must be at least 6 characters</div>';
+        return;
+      }
+
+      // Disable button and show loading
+      changeBtn.disabled = true;
+      changeBtn.innerHTML = '<span>Updating...</span> <i class="fas fa-spinner fa-spin"></i>';
+      msgDiv.innerHTML = '';
+
+      try {
+        // Note: You'll need to create this endpoint on your backend
+        const response = await fetchWithAuth('/auth/password', {
+          method: 'PUT',
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          msgDiv.innerHTML = '<div class="success-message">Password updated successfully!</div>';
+          document.getElementById('passwordForm').reset();
+          setTimeout(() => msgDiv.innerHTML = '', 3000);
+        } else {
+          msgDiv.innerHTML = `<div class="error-message">${data.message || 'Password update failed'}</div>`;
+        }
+      } catch (error) {
+        msgDiv.innerHTML = '<div class="error-message">An error occurred. Please try again.</div>';
+      } finally {
+        // Re-enable button
+        changeBtn.disabled = false;
+        changeBtn.innerHTML = 'Update Password';
+      }
     });
+
+    // Load orders if orders tab is active on page load
+    if (window.location.hash === '#orders') {
+      loadOrders();
+    }
   </script>
 </body>
 </html>

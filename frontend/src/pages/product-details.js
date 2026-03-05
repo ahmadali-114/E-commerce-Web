@@ -1,11 +1,77 @@
 // product-details.js
-import products from "../data/products.json";
-import { addToCart } from "../utils/addToCart.js";  // FIXED: import from utils
+import { getProductById } from '../services/api.js';
 import { updateCartValue } from "../utils/updateCartValue.js";
+import { isLoggedIn, getCurrentUser, getToken } from '../utils/auth.js';
 
 console.log("🔍 PRODUCT DETAILS PAGE LOADED");
 
-// ========== HELPER FUNCTIONS (DEFINED FIRST) ==========
+// ========== REVIEWS API FUNCTIONS ==========
+const API_URL = 'http://localhost:5000/api';
+
+// Fetch reviews for a product
+async function fetchReviews(productId) {
+  try {
+    const response = await fetch(`${API_URL}/products/${productId}/reviews`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    return [];
+  }
+}
+
+// Submit a new review
+async function submitReview(productId, reviewData) {
+  try {
+    const token = getToken();
+    if (!token) {
+      alert('Please login to submit a review');
+      window.location.href = 'login.html';
+      return null;
+    }
+
+    const response = await fetch(`${API_URL}/products/${productId}/reviews`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(reviewData)
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to submit review');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    alert(error.message);
+    return null;
+  }
+}
+
+// Mark review as helpful
+async function markReviewHelpful(productId, reviewId) {
+  try {
+    const token = getToken();
+    const response = await fetch(`${API_URL}/products/${productId}/reviews/${reviewId}/helpful`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Error marking review helpful:', error);
+    return false;
+  }
+}
+
+// ========== HELPER FUNCTIONS ==========
 
 // Helper function for rating stars
 function getRatingStars(rating) {
@@ -57,128 +123,88 @@ function setupQuantityControls(maxStock) {
 
 // Add to cart from details page
 function addToCartFromDetails(product, quantity) {
-  let cart = JSON.parse(localStorage.getItem('cartProductLS')) || [];
-  
-  const existingItem = cart.find(item => item.id === product.id);
-  
-  if (existingItem) {
-    existingItem.quantity += quantity;
-    existingItem.price = product.price * existingItem.quantity;
-  } else {
-    cart.push({
-      id: product.id,
-      quantity: quantity,
-      price: product.price * quantity
-    });
-  }
-  
-  localStorage.setItem('cartProductLS', JSON.stringify(cart));
-  updateCartValue(cart);
-  
-  // Show toast
-  const toast = document.createElement('div');
-  toast.classList.add('toast');
-  toast.textContent = `✅ Added ${quantity} ${product.name} to cart!`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// ========== REVIEW SYSTEM FUNCTIONS ==========
-
-// Initialize sample reviews for a product
-function initializeSampleReviews(productId) {
-  const allReviews = JSON.parse(localStorage.getItem('productReviews')) || {};
-  
-  // Only add sample reviews if there are no reviews yet
-  if (!allReviews[productId] || allReviews[productId].length === 0) {
+  try {
+    let cart = JSON.parse(localStorage.getItem('cartProductLS')) || [];
+    const totalPrice = product.price * quantity;
     
-    // Sample reviews data
-    const sampleReviews = [
-      {
-        id: 1001,
-        rating: 5,
-        title: "Excellent product!",
-        content: "Absolutely love this product! The quality is amazing and it exceeded my expectations. Highly recommended!",
-        name: "Ahmed Khan",
-        date: new Date(2026, 1, 10).toISOString(),
-        helpful: 24
-      },
-      {
-        id: 1002,
-        rating: 4,
-        title: "Very good value for money",
-        content: "Great product for the price. Works as described. Delivery was fast and packaging was secure.",
-        name: "Fatima Ali",
-        date: new Date(2026, 1, 8).toISOString(),
-        helpful: 12
-      },
-      {
-        id: 1003,
-        rating: 5,
-        title: "Best purchase this year!",
-        content: "I've been using this for a week now and I'm thoroughly impressed. The quality is top-notch and customer service was excellent.",
-        name: "Bilal Ahmed",
-        date: new Date(2026, 1, 5).toISOString(),
-        helpful: 31
-      },
-      {
-        id: 1004,
-        rating: 4,
-        title: "Good product, minor issues",
-        content: "Overall satisfied with the purchase. There were some minor issues but customer support resolved them quickly.",
-        name: "Sara Malik",
-        date: new Date(2026, 1, 1).toISOString(),
-        helpful: 8
-      }
-    ];
+    console.log(`Adding to cart: ${product.name}, Quantity: ${quantity}, Unit Price: ₹${product.price}, Total: ₹${totalPrice}`);
     
-    allReviews[productId] = sampleReviews;
-    localStorage.setItem('productReviews', JSON.stringify(allReviews));
+    const existingItem = cart.find(item => item.id === product.id);
+    
+    if (existingItem) {
+      existingItem.quantity += quantity;
+      existingItem.price = product.price * existingItem.quantity;
+    } else {
+      cart.push({
+        id: product.id,
+        quantity: quantity,
+        price: totalPrice
+      });
+    }
+    
+    localStorage.setItem('cartProductLS', JSON.stringify(cart));
+    updateCartValue(cart);
+    
+    // Show toast notification
+    const toast = document.createElement('div');
+    toast.classList.add('toast');
+    toast.textContent = `✅ Added ${quantity} ${product.name} to cart!`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+    
+    return true;
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    alert("Failed to add to cart. Please try again.");
+    return false;
   }
 }
 
-// Load reviews for this product
-function loadReviews(productId) {
-  const allReviews = JSON.parse(localStorage.getItem('productReviews')) || {};
-  const productReviews = allReviews[productId] || [];
+// ========== REVIEWS DISPLAY FUNCTIONS ==========
+
+// Display reviews on the page
+function displayReviews(reviews, productId) {
+  const reviewsList = document.getElementById('reviewsList');
+  const reviewsSummary = document.getElementById('reviewsSummary');
   
-  const summaryContainer = document.getElementById('reviewsSummary');
-  const listContainer = document.getElementById('reviewsList');
+  if (!reviewsList || !reviewsSummary) return;
   
-  if (!summaryContainer || !listContainer) return;
-  
-  if (productReviews.length === 0) {
-    summaryContainer.innerHTML = `
-      <div class="no-reviews-message">
+  if (!reviews || reviews.length === 0) {
+    reviewsSummary.innerHTML = `
+      <div class="no-reviews">
         <p>No reviews yet. Be the first to review this product!</p>
       </div>
     `;
-    listContainer.innerHTML = '';
+    reviewsList.innerHTML = '';
     return;
   }
 
   // Calculate average rating
-  const avgRating = productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length;
+  const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+  
+  // Count ratings by star
   const ratingCounts = [0, 0, 0, 0, 0];
-  productReviews.forEach(r => {
-    ratingCounts[r.rating - 1]++;
+  reviews.forEach(r => {
+    if (r.rating >= 1 && r.rating <= 5) {
+      ratingCounts[r.rating - 1]++;
+    }
   });
 
   // Summary HTML
-  summaryContainer.innerHTML = `
+  reviewsSummary.innerHTML = `
     <div class="average-rating">
       <span class="big-rating">${avgRating.toFixed(1)}</span>
       <div class="rating-stars">
         ${getRatingStars(avgRating)}
       </div>
-      <span class="total-reviews">${productReviews.length} review${productReviews.length > 1 ? 's' : ''}</span>
+      <span class="total-reviews">${reviews.length} review${reviews.length > 1 ? 's' : ''}</span>
     </div>
     <div class="rating-breakdown">
       ${[5,4,3,2,1].map(star => `
         <div class="rating-bar">
           <span>${star} star</span>
           <div class="progress-bar">
-            <div class="progress-fill" style="width: ${ratingCounts[star-1] > 0 ? (ratingCounts[star-1] / productReviews.length) * 100 : 0}%"></div>
+            <div class="progress-fill" style="width: ${reviews.length > 0 ? (ratingCounts[star-1] / reviews.length) * 100 : 0}%"></div>
           </div>
           <span>${ratingCounts[star-1]}</span>
         </div>
@@ -187,25 +213,25 @@ function loadReviews(productId) {
   `;
 
   // Reviews list HTML
-  listContainer.innerHTML = productReviews.map(review => `
+  reviewsList.innerHTML = reviews.map(review => `
     <div class="review-card">
       <div class="review-header">
         <div class="reviewer-info">
-          <strong>${review.name}</strong>
+          <strong>${review.userName || 'Anonymous'}</strong>
           <div class="review-rating">
             ${getRatingStars(review.rating)}
           </div>
         </div>
-        <span class="review-date">${new Date(review.date).toLocaleDateString('en-PK', {
+        <span class="review-date">${new Date(review.createdAt).toLocaleDateString('en-PK', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         })}</span>
       </div>
       ${review.title ? `<h4 class="review-title">${review.title}</h4>` : ''}
-      <p class="review-content">${review.content}</p>
+      <p class="review-content">${review.comment || review.content}</p>
       <div class="review-actions">
-        <button class="helpful-btn" onclick="window.markHelpful(${productId}, ${review.id})">
+        <button class="helpful-btn" onclick="window.markHelpful('${productId}', '${review.id}')">
           <i class="far fa-thumbs-up"></i> Helpful (${review.helpful || 0})
         </button>
       </div>
@@ -228,8 +254,13 @@ function setupReviewForm(productId) {
   
   let selectedRating = 0;
 
-  // Show form
+  // Show form (check if user is logged in)
   writeBtn.addEventListener('click', () => {
+    if (!isLoggedIn()) {
+      alert('Please login to write a review');
+      window.location.href = 'login.html';
+      return;
+    }
     form.style.display = 'block';
     writeBtn.style.display = 'none';
   });
@@ -259,7 +290,7 @@ function setupReviewForm(productId) {
   });
 
   // Submit review
-  submitBtn.addEventListener('click', () => {
+  submitBtn.addEventListener('click', async () => {
     const title = document.getElementById('reviewTitle').value;
     const content = document.getElementById('reviewContent').value;
     const name = document.getElementById('reviewerName').value || 'Anonymous';
@@ -274,27 +305,36 @@ function setupReviewForm(productId) {
       return;
     }
 
-    // Save review
-    saveReview(productId, {
-      id: Date.now(),
+    // Disable button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    // Submit review to API
+    const reviewData = {
       rating: selectedRating,
       title,
-      content,
-      name,
-      date: new Date().toISOString(),
-      helpful: 0
-    });
+      comment: content,
+      name
+    };
 
-    // Reset and hide form
-    form.style.display = 'none';
-    writeBtn.style.display = 'block';
-    resetReviewForm();
+    const result = await submitReview(productId, reviewData);
 
-    // Reload reviews
-    loadReviews(productId);
-    
-    // Show success message
-    alert('Thank you for your review!');
+    if (result) {
+      // Reset and hide form
+      form.style.display = 'none';
+      writeBtn.style.display = 'block';
+      resetReviewForm();
+
+      // Reload reviews
+      const updatedReviews = await fetchReviews(productId);
+      displayReviews(updatedReviews, productId);
+      
+      alert('Thank you for your review!');
+    }
+
+    // Re-enable button
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'Submit Review';
   });
 
   // Highlight stars helper
@@ -318,91 +358,38 @@ function setupReviewForm(productId) {
   }
 }
 
-// Save review to localStorage
-function saveReview(productId, review) {
-  const allReviews = JSON.parse(localStorage.getItem('productReviews')) || {};
-  
-  if (!allReviews[productId]) {
-    allReviews[productId] = [];
-  }
-  
-  allReviews[productId].push(review);
-  localStorage.setItem('productReviews', JSON.stringify(allReviews));
-}
-
-// Mark helpful (make it global)
-window.markHelpful = (productId, reviewId) => {
-  const allReviews = JSON.parse(localStorage.getItem('productReviews')) || {};
-  const reviews = allReviews[productId] || [];
-  const review = reviews.find(r => r.id === reviewId);
-  
-  if (review) {
-    review.helpful = (review.helpful || 0) + 1;
-    localStorage.setItem('productReviews', JSON.stringify(allReviews));
-    loadReviews(productId);
-  }
-};
-
 // ========== MAIN INITIALIZATION ==========
-
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-  console.log("🔍 PRODUCT DETAILS PAGE LOADED - DOM CONTENT LOADED");
+document.addEventListener('DOMContentLoaded', async function() {
+  console.log("🔍 PRODUCT DETAILS PAGE LOADED");
   
   // Get product ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const productId = parseInt(urlParams.get('id'));
   
   console.log("🔍 Looking for product ID:", productId);
-  console.log("🔍 URL params:", window.location.search);
   
   if (!productId) {
-    console.error("❌ No product ID found in URL!");
-    const container = document.getElementById('productDetailsContainer');
-    if (container) {
-      container.innerHTML = `
-        <div class="no-products">
-          <i class="fas fa-exclamation-circle"></i>
-          <h3>No Product Selected</h3>
-          <p>Please select a product from the products page.</p>
-          <a href="products.html" class="btn">Back to Products</a>
-        </div>
-      `;
-    }
+    showError("No product selected");
     return;
   }
 
-  console.log("🔍 Total products available:", products.length);
-  
-  // Find product
-  const product = products.find(p => p.id === productId);
-  
-  console.log("🔍 Found product:", product);
-
-  const container = document.getElementById('productDetailsContainer');
-  const reviewsWrapper = document.getElementById('reviewsWrapper');
-
-  if (!product) {
-    console.log("❌ Product not found");
-    if (container) {
-      container.innerHTML = `
-        <div class="no-products">
-          <i class="fas fa-exclamation-circle"></i>
-          <h3>Product Not Found</h3>
-          <p>The product you're looking for doesn't exist.</p>
-          <a href="products.html" class="btn">Back to Products</a>
-        </div>
-      `;
+  try {
+    console.log("🔍 Fetching product from API...");
+    const product = await getProductById(productId);
+    console.log("✅ Product received:", product);
+    
+    const container = document.getElementById('productDetailsContainer');
+    const reviewsWrapper = document.getElementById('reviewsWrapper');
+    
+    if (!product) {
+      showError("Product not found");
+      return;
     }
-    if (reviewsWrapper) reviewsWrapper.style.display = 'none';
-  } else {
-    console.log("✅ Product found, rendering details...");
-    // Show reviews section
+    
     if (reviewsWrapper) reviewsWrapper.style.display = 'block';
     
-    // Display product details
-    const discount = product.originalprice && product.price 
-      ? Math.round(((product.originalprice - product.price) / product.originalprice) * 100)
+    const discount = product.originalPrice && product.price 
+      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
       : 0;
 
     container.innerHTML = `
@@ -418,13 +405,13 @@ document.addEventListener('DOMContentLoaded', function() {
           
           <div class="product-ratings">
             ${getRatingStars(product.rating)}
-            <span class="rating-count">(${product.reviewCount?.toLocaleString() || 0} reviews)</span>
+            <span class="rating-count">(${product.reviewCount || 0} reviews)</span>
           </div>
           
           <div class="product-prices">
-            <span class="current-price">₹${product.price.toLocaleString()}</span>
-            ${product.originalprice ? `
-              <span class="original-price">₹${product.originalprice.toLocaleString()}</span>
+            <span class="current-price">₹${Number(product.price).toLocaleString()}</span>
+            ${product.originalPrice ? `
+              <span class="original-price">₹${Number(product.originalPrice).toLocaleString()}</span>
               <span class="discount-badge-large">${discount}% OFF</span>
             ` : ''}
           </div>
@@ -438,28 +425,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <h3>Description</h3>
             <p>${product.description}</p>
           </div>
-          
-          ${product.colors?.length ? `
-            <div class="product-colors">
-              <h3>Colors Available:</h3>
-              <div class="color-options">
-                ${product.colors.map(color => `
-                  <span class="color-tag">${color}</span>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
-          
-          ${product.sizes?.length ? `
-            <div class="product-sizes">
-              <h3>Sizes:</h3>
-              <div class="size-options">
-                ${product.sizes.map(size => `
-                  <span class="size-tag">${size}</span>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
           
           <div class="product-quantity-detail">
             <h3>Quantity:</h3>
@@ -482,15 +447,11 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="product-meta">
             <p><i class="fas fa-truck"></i> Free shipping on orders above ₹1000</p>
             <p><i class="fas fa-undo"></i> 30-day return policy</p>
-            <p><i class="fas fa-shield-alt"></i> 1 year warranty</p>
           </div>
         </div>
       </div>
     `;
 
-    console.log("✅ Product HTML rendered");
-
-    // Add event listeners
     setupQuantityControls(product.stock);
     
     document.getElementById('detailsAddToCart').addEventListener('click', () => {
@@ -504,13 +465,41 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.href = 'addToCart.html';
     });
 
-    // Initialize sample reviews for this product
-    initializeSampleReviews(product.id);
+    // Load and display reviews
+    console.log("🔍 Fetching reviews...");
+    const reviews = await fetchReviews(productId);
+    displayReviews(reviews, productId);
+    setupReviewForm(productId);
     
-    // Load reviews
-    loadReviews(product.id);
-    setupReviewForm(product.id);
-    
-    console.log("✅ All event listeners and reviews set up");
+  } catch (error) {
+    console.error("❌ Error:", error);
+    showError("Failed to load product");
   }
 });
+
+function showError(message) {
+  const container = document.getElementById('productDetailsContainer');
+  const reviewsWrapper = document.getElementById('reviewsWrapper');
+  
+  if (container) {
+    container.innerHTML = `
+      <div class="no-products">
+        <i class="fas fa-exclamation-circle"></i>
+        <h3>${message}</h3>
+        <p>Please try again later.</p>
+        <a href="products.html" class="btn">Back to Products</a>
+      </div>
+    `;
+  }
+  if (reviewsWrapper) reviewsWrapper.style.display = 'none';
+}
+
+// Make markHelpful available globally
+window.markHelpful = async (productId, reviewId) => {
+  const success = await markReviewHelpful(productId, reviewId);
+  if (success) {
+    // Reload reviews to show updated count
+    const reviews = await fetchReviews(productId);
+    displayReviews(reviews, productId);
+  }
+};

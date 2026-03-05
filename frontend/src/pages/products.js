@@ -1,8 +1,17 @@
 // products.js
 import { getProducts, searchProducts } from '../services/api.js';
 import { setupSearch } from "../utils/search.js";
+import { homeQuantityToggle } from "../utils/homeQuantityToggle.js";
+import { addToCart } from "../utils/addToCart.js";
 
 console.log("Products.js loaded");
+
+// Add this at the top of products.js after imports
+console.log("Checking API connection...");
+fetch('http://localhost:5000/api/products')
+  .then(res => res.json())
+  .then(data => console.log("API test - products:", data))
+  .catch(err => console.error("API test failed:", err));
 
 const productContainer = document.querySelector("#productContainer");
 const productTemplate = document.querySelector("#productTemplate");
@@ -35,7 +44,19 @@ const categoryNames = {
   'toys': 'Toys & Games',
   'automotive': 'Automotive',
   'groceries': 'Groceries',
-  'furniture': 'Furniture'
+  'furniture': 'Furniture',
+  'pets': 'Pets',
+  'garden': 'Garden',
+  'office': 'Office',
+  'baby': 'Baby',
+  'music': 'Music',
+  'jewelry': 'Jewelry',
+  'watches': 'Watches',
+  'shoes': 'Shoes',
+  'bags': 'Bags',
+  'camping': 'Camping',
+  'photography': 'Photography',
+  'gaming': 'Gaming'
 };
 
 // Store current products being displayed
@@ -188,7 +209,7 @@ const renderProducts = (productsToRender) => {
     // Set image
     const imgElem = productClone.querySelector(".productImage");
     if (imgElem) {
-      imgElem.src = image;
+      imgElem.src = image || 'https://via.placeholder.com/300x200?text=No+Image';
       imgElem.alt = name;
     }
     
@@ -382,10 +403,6 @@ const updateActiveFilters = () => {
     activeFilters.innerHTML = '';
   }
 };
-
-// Import homeQuantityToggle and addToCart
-import { homeQuantityToggle } from "../utils/homeQuantityToggle.js";
-import { addToCart } from "../utils/addToCart.js";
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {

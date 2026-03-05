@@ -1,170 +1,249 @@
-// auth.js – Simple localStorage-based authentication with orders
+// auth.js – Backend API authentication with JWT
 
-// User storage key
-const STORAGE_KEY = 'easeshop_users';
-const CURRENT_USER_KEY = 'easeshop_current_user';
+const API_URL = 'http://localhost:5000/api/auth';
 
-// Orders storage key
-const ORDERS_KEY = 'easeshop_orders';
+// ========== HELPER FUNCTIONS ==========
 
-// Initialize users array if not exists
-function initUsers() {
-  if (!localStorage.getItem(STORAGE_KEY)) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-  }
-}
+// Get auth token
+export const getToken = () => {
+  return localStorage.getItem('token');
+};
 
-// Get all users
-function getUsers() {
-  initUsers();
-  return JSON.parse(localStorage.getItem(STORAGE_KEY));
-}
+// Get current user from localStorage
+export const getCurrentUser = () => {
+  const user = localStorage.getItem('user');
+  return user ? JSON.parse(user) : null;
+};
 
-// Save users
-function saveUsers(users) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-}
-
-// Get all orders
-function getAllOrders() {
-  return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
-}
+// Check if user is logged in
+export const isLoggedIn = () => {
+  return !!localStorage.getItem('token');
+};
 
 // ========== USER AUTHENTICATION ==========
 
 // Register a new user
-export function registerUser(userData) {
-  const users = getUsers();
-  
-  // Check if email already exists
-  const existingUser = users.find(u => u.email === userData.email);
-  if (existingUser) {
-    return { success: false, message: 'Email already registered' };
+export async function registerUser(userData) {
+  try {
+    const response = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone || '',
+        password: userData.password
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || 'Registration failed' 
+      };
+    }
+
+    // Store token and user data
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    return { 
+      success: true, 
+      message: data.message,
+      user: data.user 
+    };
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    return { 
+      success: false, 
+      message: 'Network error. Please try again.' 
+    };
   }
-
-  // Create new user (include all fields)
-  const newUser = {
-    id: Date.now().toString(),
-    firstName: userData.firstName || '',
-    lastName: userData.lastName || '',
-    email: userData.email,
-    phone: userData.phone || '',
-    password: userData.password, // In real app, hash this!
-    address: '',
-    city: ''
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-  
-  return { success: true, message: 'Account created successfully' };
 }
 
 // Login user
-export function loginUser(email, password) {
-  const users = getUsers();
-  const user = users.find(u => u.email === email && u.password === password);
-  
-  if (user) {
-    // Store current user (excluding password)
-    const { password, ...safeUser } = user;
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
-    return { success: true, message: 'Login successful', user: safeUser };
-  } else {
-    return { success: false, message: 'Invalid email or password' };
+export async function loginUser(email, password) {
+  try {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || 'Login failed' 
+      };
+    }
+
+    // Store token and user data
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    return { 
+      success: true, 
+      message: data.message,
+      user: data.user 
+    };
+
+  } catch (error) {
+    console.error('Login error:', error);
+    return { 
+      success: false, 
+      message: 'Network error. Please try again.' 
+    };
   }
 }
 
 // Logout
 export function logout() {
-  localStorage.removeItem(CURRENT_USER_KEY);
-}
-
-// Get current user
-export function getCurrentUser() {
-  const userJson = localStorage.getItem(CURRENT_USER_KEY);
-  return userJson ? JSON.parse(userJson) : null;
-}
-
-// Check if user is logged in
-export function isLoggedIn() {
-  return !!getCurrentUser();
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
 }
 
 // Update user profile
-export function updateUserProfile(updatedFields) {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return { success: false, message: 'Not logged in' };
+export async function updateUserProfile(updatedFields) {
+  try {
+    const token = getToken();
+    
+    if (!token) {
+      return { success: false, message: 'Not logged in' };
+    }
 
-  const users = getUsers();
-  const userIndex = users.findIndex(u => u.id === currentUser.id);
-  
-  if (userIndex === -1) return { success: false, message: 'User not found' };
+    const response = await fetch(`${API_URL}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updatedFields)
+    });
 
-  // Update user data
-  const updatedUser = { ...users[userIndex], ...updatedFields };
-  users[userIndex] = updatedUser;
-  saveUsers(users);
+    const data = await response.json();
 
-  // Update current user (exclude password)
-  const { password, ...safeUser } = updatedUser;
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || 'Profile update failed' 
+      };
+    }
 
-  return { success: true, message: 'Profile updated' };
+    // Update stored user data
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    return { 
+      success: true, 
+      message: data.message,
+      user: data.user 
+    };
+
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return { 
+      success: false, 
+      message: 'Network error. Please try again.' 
+    };
+  }
 }
 
 // ========== PASSWORD RESET ==========
 
-// Forgot password - generate reset token (simplified)
-export function requestPasswordReset(email) {
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-  
-  if (!user) {
-    return { success: false, message: 'Email not found' };
-  }
-
-  // In a real app, send email with token. Here we return a dummy token.
-  const resetToken = btoa(email + '-' + Date.now());
-  // Store token with user? For demo, we just return it.
-  return { 
-    success: true, 
-    message: 'Reset link sent (demo)', 
-    debugToken: resetToken 
-  };
-}
-
-// Reset password
-export function resetPassword(token, newPassword) {
-  // In a real app, validate token. For demo, we accept any token.
-  // We'll assume token contains email after decoding.
+// Request password reset
+export async function requestPasswordReset(email) {
   try {
-    const decoded = atob(token);
-    const email = decoded.split('-')[0];
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.email === email);
-    
-    if (userIndex === -1) {
-      return { success: false, message: 'Invalid token' };
+    // Note: You'll need to create this endpoint on your backend
+    const response = await fetch(`${API_URL}/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || 'Request failed' 
+      };
     }
 
-    users[userIndex].password = newPassword;
-    saveUsers(users);
-    return { success: true, message: 'Password updated' };
-  } catch (e) {
-    return { success: false, message: 'Invalid token' };
+    return { 
+      success: true, 
+      message: data.message || 'Reset link sent to your email' 
+    };
+
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    return { 
+      success: false, 
+      message: 'Network error. Please try again.' 
+    };
   }
 }
 
-// Validate reset token (for entering the reset page)
-export function validateResetToken(token) {
+// Reset password with token
+export async function resetPassword(token, newPassword) {
   try {
-    const decoded = atob(token);
-    const email = decoded.split('-')[0];
-    const users = getUsers();
-    const user = users.find(u => u.email === email);
-    return { valid: !!user };
-  } catch {
+    // Note: You'll need to create this endpoint on your backend
+    const response = await fetch(`${API_URL}/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ token, newPassword })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || 'Password reset failed' 
+      };
+    }
+
+    return { 
+      success: true, 
+      message: data.message || 'Password updated successfully' 
+    };
+
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return { 
+      success: false, 
+      message: 'Network error. Please try again.' 
+    };
+  }
+}
+
+// Validate reset token
+export async function validateResetToken(token) {
+  try {
+    // Note: You'll need to create this endpoint on your backend
+    const response = await fetch(`${API_URL}/validate-token/${token}`);
+    
+    const data = await response.json();
+
+    return { 
+      valid: response.ok, 
+      message: data.message 
+    };
+
+  } catch (error) {
+    console.error('Token validation error:', error);
     return { valid: false };
   }
 }
@@ -172,33 +251,101 @@ export function validateResetToken(token) {
 // ========== ORDERS ==========
 
 // Save an order for the current user
-export function saveOrder(orderData) {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return { success: false, message: 'Not logged in' };
+export async function saveOrder(orderData) {
+  try {
+    const token = getToken();
+    
+    if (!token) {
+      return { success: false, message: 'Not logged in' };
+    }
 
-  const orders = getAllOrders();
-  const newOrder = {
-    id: 'ORD-' + Date.now(),
-    userId: currentUser.id,
-    date: new Date().toISOString(),
-    status: 'Processing',
-    items: orderData.items || [],
-    subtotal: orderData.subtotal || 0,
-    tax: orderData.tax || 0,
-    shipping: orderData.shipping || 0,
-    total: orderData.total || 0,
-    address: orderData.address || {},
-    paymentMethod: orderData.paymentMethod || 'Cash on Delivery'
-  };
-  orders.push(newOrder);
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  return { success: true, orderId: newOrder.id };
+    // Note: You'll need to create this endpoint on your backend
+    const response = await fetch('http://localhost:5000/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(orderData)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || 'Order failed' 
+      };
+    }
+
+    return { 
+      success: true, 
+      orderId: data.id,
+      message: data.message || 'Order placed successfully' 
+    };
+
+  } catch (error) {
+    console.error('Order error:', error);
+    return { 
+      success: false, 
+      message: 'Network error. Please try again.' 
+    };
+  }
 }
 
 // Get orders for the current user
-export function getUserOrders() {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return [];
-  const orders = getAllOrders();
-  return orders.filter(order => order.userId === currentUser.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+export async function getUserOrders() {
+  try {
+    const token = getToken();
+    
+    if (!token) {
+      return [];
+    }
+
+    // Note: You'll need to create this endpoint on your backend
+    const response = await fetch('http://localhost:5000/api/orders/myorders', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const orders = await response.json();
+    return orders;
+
+  } catch (error) {
+    console.error('Get orders error:', error);
+    return [];
+  }
+}
+
+// Get single order by ID
+export async function getOrderById(orderId) {
+  try {
+    const token = getToken();
+    
+    if (!token) {
+      return null;
+    }
+
+    const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const order = await response.json();
+    return order;
+
+  } catch (error) {
+    console.error('Get order error:', error);
+    return null;
+  }
 }

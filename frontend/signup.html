@@ -76,7 +76,7 @@
             <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a></span>
           </label>
         </div>
-        <button type="submit" class="login-btn"><span>Sign Up</span> <i class="fas fa-arrow-right"></i></button>
+        <button type="submit" class="login-btn" id="signupBtn"><span>Sign Up</span> <i class="fas fa-arrow-right"></i></button>
       </form>
 
       <!-- SOCIAL LOGIN -->
@@ -105,10 +105,12 @@
   <!-- Updated scripts -->
   <script type="module" src="./src/utils/auth-status.js"></script>
   <script type="module">
-    import { registerUser } from './src/utils/auth.js';  // updated path
+    import { registerUser } from './src/utils/auth.js';
 
-    document.getElementById('signupForm').addEventListener('submit', (e) => {
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      // Get form values
       const firstName = document.getElementById('firstName').value;
       const lastName = document.getElementById('lastName').value;
       const email = document.getElementById('email').value;
@@ -117,26 +119,63 @@
       const confirm = document.getElementById('confirmPassword').value;
       const terms = document.getElementById('terms').checked;
       const msgDiv = document.getElementById('signupMessage');
+      const signupBtn = document.getElementById('signupBtn');
 
+      // Client-side validation
       if (password !== confirm) {
         msgDiv.innerHTML = '<div class="error-message">Passwords do not match</div>';
         return;
       }
+      
       if (password.length < 6) {
         msgDiv.innerHTML = '<div class="error-message">Password must be at least 6 characters</div>';
         return;
       }
+      
       if (!terms) {
         msgDiv.innerHTML = '<div class="error-message">You must agree to the terms</div>';
         return;
       }
 
-      const result = registerUser({ firstName, lastName, email, phone, password });
-      if (result.success) {
-        msgDiv.innerHTML = '<div class="success-message">Account created! Redirecting...</div>';
-        setTimeout(() => window.location.href = 'login.html', 2000);
-      } else {
-        msgDiv.innerHTML = `<div class="error-message">${result.message}</div>`;
+      // Disable button and show loading
+      signupBtn.disabled = true;
+      signupBtn.innerHTML = '<span>Creating account...</span> <i class="fas fa-spinner fa-spin"></i>';
+      msgDiv.innerHTML = '';
+
+      try {
+        // Call the async register function
+        const result = await registerUser({ 
+          firstName, 
+          lastName, 
+          email, 
+          phone, 
+          password 
+        });
+        
+        if (result.success) {
+          msgDiv.innerHTML = '<div class="success-message">Account created! Redirecting to login...</div>';
+          
+          // Update auth status in navbar
+          if (window.updateAuthUI) {
+            window.updateAuthUI();
+          }
+          
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
+        } else {
+          msgDiv.innerHTML = `<div class="error-message">${result.message}</div>`;
+          
+          // Re-enable button
+          signupBtn.disabled = false;
+          signupBtn.innerHTML = '<span>Sign Up</span> <i class="fas fa-arrow-right"></i>';
+        }
+      } catch (error) {
+        msgDiv.innerHTML = '<div class="error-message">An error occurred. Please try again.</div>';
+        
+        // Re-enable button
+        signupBtn.disabled = false;
+        signupBtn.innerHTML = '<span>Sign Up</span> <i class="fas fa-arrow-right"></i>';
       }
     });
   </script>

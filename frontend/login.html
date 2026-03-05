@@ -44,7 +44,7 @@
     </div>
   </header>
 
-  <!-- LOGIN CARD (same) -->
+  <!-- LOGIN CARD -->
   <div class="login-section">
     <div class="login-card">
       <h2 class="login-title">Welcome Back</h2>
@@ -65,10 +65,10 @@
           </label>
           <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
         </div>
-        <button type="submit" class="login-btn"><span>Sign In</span> <i class="fas fa-arrow-right"></i></button>
+        <button type="submit" class="login-btn" id="loginBtn"><span>Sign In</span> <i class="fas fa-arrow-right"></i></button>
       </form>
 
-      <!-- SOCIAL LOGIN (same) -->
+      <!-- SOCIAL LOGIN -->
       <div class="social-login">
         <div class="social-divider"><span>Or continue with</span></div>
         <div class="social-buttons">
@@ -84,7 +84,7 @@
     </div>
   </div>
 
-  <!-- FOOTER (same) -->
+  <!-- FOOTER -->
   <footer class="section-footer">
     <div class="copyright">
       <p>&copy; 2026 EaseShop - FYP Project. All rights reserved. | Designed with for online shopping by Zain Bin Ishfaq</p>
@@ -94,24 +94,55 @@
   <!-- Updated scripts -->
   <script type="module" src="./src/utils/auth-status.js"></script>
   <script type="module">
-    import { loginUser, isLoggedIn } from './src/utils/auth.js';  // updated path
+    import { loginUser, isLoggedIn } from './src/utils/auth.js';
 
+    // Check if already logged in
     if (isLoggedIn()) {
       window.location.href = 'profile.html';
     }
 
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
+    // Handle login form submission
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const msgDiv = document.getElementById('loginMessage');
+      const loginBtn = document.getElementById('loginBtn');
+      
+      // Disable button and show loading
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<span>Logging in...</span> <i class="fas fa-spinner fa-spin"></i>';
+      msgDiv.innerHTML = '';
 
-      const result = loginUser(email, password);
-      if (result.success) {
-        msgDiv.innerHTML = '<div class="success-message">Login successful! Redirecting...</div>';
-        setTimeout(() => window.location.href = 'index.html', 1500);
-      } else {
-        msgDiv.innerHTML = `<div class="error-message">${result.message}</div>`;
+      try {
+        // Call the async login function
+        const result = await loginUser(email, password);
+        
+        if (result.success) {
+          msgDiv.innerHTML = '<div class="success-message">Login successful! Redirecting...</div>';
+          
+          // Update auth status in navbar
+          if (window.updateAuthUI) {
+            window.updateAuthUI();
+          }
+          
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
+        } else {
+          msgDiv.innerHTML = `<div class="error-message">${result.message}</div>`;
+          
+          // Re-enable button
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = '<span>Sign In</span> <i class="fas fa-arrow-right"></i>';
+        }
+      } catch (error) {
+        msgDiv.innerHTML = '<div class="error-message">An error occurred. Please try again.</div>';
+        
+        // Re-enable button
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<span>Sign In</span> <i class="fas fa-arrow-right"></i>';
       }
     });
   </script>
