@@ -1,5 +1,5 @@
 // orders.js
-import { getMyOrders, getToken, isLoggedIn } from '../utils/auth.js';
+import { getUserOrders, getToken, isLoggedIn } from '../utils/auth.js';
 
 // Redirect if not logged in
 if (!isLoggedIn()) {
@@ -21,7 +21,7 @@ const loadOrders = async () => {
   `;
 
   try {
-    const orders = await getMyOrders();
+    const orders = await getUserOrders();  // Fixed: changed from getMyOrders
     console.log("Orders loaded:", orders);
     
     if (!orders || orders.length === 0) {
