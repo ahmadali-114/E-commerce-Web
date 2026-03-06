@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: easeshop-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: easeshop
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - easeshop-network
+
+  backend:
+    build: ./backend
+    container_name: easeshop-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: easeshop
+      JWT_SECRET: easeshop_super_secret_key_2026
+      ADMIN_SECRET_KEY: admin123
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - easeshop-network
+
+  frontend:
+    build: ./frontend
+    container_name: easeshop-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - easeshop-network
+
+volumes:
+  mysql_data:
+
+networks:
+  easeshop-network:
+    driver: bridge
