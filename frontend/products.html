@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Font Awesome Icons -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     
     <!-- Google Fonts - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,266 +15,500 @@
     <!-- AOS Animation Library -->
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
     
-    <!-- Custom CSS - UPDATED PATH -->
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="src/styles/style.css" />
     
     <title>EaseShop - Our Products</title>
-  </head>
-  <body>
+    <style>
+        /* Category Chips Container - Scrollable */
+        .category-chips-container {
+            position: relative;
+            width: 100%;
+            margin: 20px 0;
+        }
 
+        .category-chips {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 10px 0 20px 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            white-space: nowrap;
+        }
+
+        /* Custom Scrollbar */
+        .category-chips::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .category-chips::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 10px;
+        }
+
+        .category-chips::-webkit-scrollbar-thumb {
+            background: var(--orange);
+            border-radius: 10px;
+        }
+
+        .category-chips::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-orange);
+        }
+
+        /* Category Chip Styling */
+        .category-chip {
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid transparent;
+            flex-shrink: 0;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .category-chip i {
+            font-size: 14px;
+        }
+
+        /* Navigation Arrows */
+        .scroll-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 2px solid var(--orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .category-chips-container:hover .scroll-arrow {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .scroll-arrow:hover {
+            background: var(--orange);
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .scroll-arrow.left {
+            left: -20px;
+        }
+
+        .scroll-arrow.right {
+            right: -20px;
+        }
+
+        .scroll-arrow i {
+            font-size: 18px;
+        }
+
+        /* Category Colors - Keep existing colors */
+        .category-chip.electronics { background: #e3f2fd; color: #1976d2; }
+        .category-chip.electronics:hover { background: #1976d2; color: white; }
+        .category-chip.clothing { background: #fce4ec; color: #c2185b; }
+        .category-chip.clothing:hover { background: #c2185b; color: white; }
+        .category-chip.sports { background: #e8f5e9; color: #388e3c; }
+        .category-chip.sports:hover { background: #388e3c; color: white; }
+        .category-chip.furniture { background: #fbe9e7; color: #d84315; }
+        .category-chip.furniture:hover { background: #d84315; color: white; }
+        .category-chip.books { background: #f3e5f5; color: #7b1fa2; }
+        .category-chip.books:hover { background: #7b1fa2; color: white; }
+        .category-chip.beauty { background: #fff3e0; color: #f57c00; }
+        .category-chip.beauty:hover { background: #f57c00; color: white; }
+        .category-chip.toys { background: #ffebee; color: #c62828; }
+        .category-chip.toys:hover { background: #c62828; color: white; }
+        .category-chip.automotive { background: #e0f2f1; color: #00695c; }
+        .category-chip.automotive:hover { background: #00695c; color: white; }
+        .category-chip.groceries { background: #fff9c4; color: #fbc02d; }
+        .category-chip.groceries:hover { background: #fbc02d; color: white; }
+        .category-chip.home { background: #d1c4e9; color: #512da8; }
+        .category-chip.home:hover { background: #512da8; color: white; }
+        .category-chip.garden { background: #c8e6c9; color: #2e7d32; }
+        .category-chip.garden:hover { background: #2e7d32; color: white; }
+        .category-chip.kitchen { background: #ffe0b2; color: #e65100; }
+        .category-chip.kitchen:hover { background: #e65100; color: white; }
+        .category-chip.music { background: #e1f5fe; color: #0288d1; }
+        .category-chip.music:hover { background: #0288d1; color: white; }
+        .category-chip.gaming { background: #ede7f6; color: #512da8; }
+        .category-chip.gaming:hover { background: #512da8; color: white; }
+        .category-chip.health { background: #e0f7fa; color: #00838f; }
+        .category-chip.health:hover { background: #00838f; color: white; }
+        .category-chip.baby { background: #fff3e0; color: #e65100; }
+        .category-chip.baby:hover { background: #e65100; color: white; }
+        .category-chip.shoes { background: #ffebee; color: #b71c1c; }
+        .category-chip.shoes:hover { background: #b71c1c; color: white; }
+        .category-chip.watches { background: #e0f2f1; color: #004d40; }
+        .category-chip.watches:hover { background: #004d40; color: white; }
+        .category-chip.bags { background: #fff3e0; color: #bf360c; }
+        .category-chip.bags:hover { background: #bf360c; color: white; }
+        .category-chip.cameras { background: #e8eaf6; color: #283593; }
+        .category-chip.cameras:hover { background: #283593; color: white; }
+        .category-chip.phones { background: #e1f5fe; color: #01579b; }
+        .category-chip.phones:hover { background: #01579b; color: white; }
+        .category-chip.computers { background: #f3e5f5; color: #4a148c; }
+        .category-chip.computers:hover { background: #4a148c; color: white; }
+        .category-chip.pet { background: #fff3e0; color: #e65100; }
+        .category-chip.pet:hover { background: #e65100; color: white; }
+        .category-chip.office { background: #e0e0e0; color: #424242; }
+        .category-chip.office:hover { background: #424242; color: white; }
+        .category-chip.jewelry { background: #fff3e0; color: #ff6f00; }
+        .category-chip.jewelry:hover { background: #ff6f00; color: white; }
+
+        .category-chip.active {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 2px solid var(--orange);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .scroll-arrow {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
     <header class="section-navbar">
-      <section class="top_txt">
-        <div class="head container">
-          <div class="head_txt">
-            <p>✨ Free shipping, 30-day return or refund guarantee ✨</p>
-          </div>
-          <div class="sing_in_up" id="authButtons">
-            <a href="login.html">Sign In</a>
-            <a href="signup.html">Sign Up</a>
-          </div>
-          <a href="profile.html" class="name-button" id="nameButton" style="display: none;">
-            <i class="fas fa-user-circle"></i>
-            <span id="userNameDisplay">John</span>
-          </a>
+        <section class="top_txt">
+            <div class="head container">
+                <div class="head_txt">
+                    <p>✨ Free shipping, 30-day return or refund guarantee ✨</p>
+                </div>
+                <div class="sing_in_up" id="authButtons">
+                    <a href="login.html">Sign In</a>
+                    <a href="signup.html">Sign Up</a>
+                </div>
+                <a href="profile.html" class="name-button" id="nameButton" style="display: none;">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="userNameDisplay">John</span>
+                </a>
+            </div>
+        </section>
+        
+        <div class="container">
+            <div class="navbar-brand">
+                <a href="index.html" class="text-logo">Ease<span>Shop</span></a>
+            </div>
+            <nav class="navbar">
+                <ul>
+                    <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="products.html" class="nav-link active">Products</a></li>
+                    <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+                    <li class="nav-item">
+                        <a href="addToCart.html" class="nav-link" id="cartValue">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span>0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
-      </section>
-      
-      <div class="container">
-        <div class="navbar-brand">
-          <a href="index.html" class="text-logo">
-            Ease<span>Shop</span>
-          </a>
-        </div>
-
-        <nav class="navbar">
-          <ul>
-            <li class="nav-item">
-              <a href="/" class="nav-link">Home</a>
-            </li>
-            <li class="nav-item">
-              <a href="about.html" class="nav-link">About</a>
-            </li>
-            <li class="nav-item">
-              <a href="products.html" class="nav-link active">Products</a>
-            </li>
-            <li class="nav-item">
-              <a href="contact.html" class="nav-link">Contact</a>
-            </li>
-            <li class="nav-item">
-              <a href="addToCart.html" class="nav-link" id="cartValue">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span>0</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </div>
     </header>
 
-    <!-- ========== FIXED SEARCH SECTION ========== -->
+    <!-- Search Section -->
     <section class="search-section">
-      <div class="container">
-        <div class="search-box">
-          <div class="search-header">
-            <h3>Find Your Perfect Product</h3>
-            <p>Search by name, brand, or description</p>
-          </div>
-          
-          <div class="search-wrapper">
-            <div class="search-input-container">
-              <i class="fas fa-search"></i>
-              <input 
-                type="text" 
-                id="searchInput" 
-                class="search-input" 
-                placeholder="e.g., laptop, sony, nike, headphones..."
-                autocomplete="off"
-              >
+        <div class="container">
+            <div class="search-box">
+                <div class="search-header">
+                    <h3>Find Your Perfect Product</h3>
+                    <p>Search by name, brand, or description</p>
+                </div>
+                <div class="search-wrapper">
+                    <div class="search-input-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" class="search-input" 
+                               placeholder="e.g., laptop, sony, nike, headphones..." autocomplete="off">
+                    </div>
+                    <button class="search-btn" id="searchBtn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="search-filters">
+                    <span class="filter-chip active" data-filter="all"><i class="fas fa-globe"></i> All Fields</span>
+                    <span class="filter-chip" data-filter="name"><i class="fas fa-tag"></i> Product Name</span>
+                    <span class="filter-chip" data-filter="brand"><i class="fas fa-building"></i> Brand</span>
+                    <span class="filter-chip" data-filter="description"><i class="fas fa-align-left"></i> Description</span>
+                </div>
+                <div class="search-status" id="searchStatus">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Type at least 2 characters to search</span>
+                </div>
             </div>
-            <button class="search-btn" id="searchBtn">
-              <i class="fas fa-search"></i> Search
-            </button>
-          </div>
-
-          <!-- Filter Chips -->
-          <div class="search-filters">
-            <span class="filter-chip active" data-filter="all">
-              <i class="fas fa-globe"></i> All Fields
-            </span>
-            <span class="filter-chip" data-filter="name">
-              <i class="fas fa-tag"></i> Product Name
-            </span>
-            <span class="filter-chip" data-filter="brand">
-              <i class="fas fa-building"></i> Brand
-            </span>
-            <span class="filter-chip" data-filter="description">
-              <i class="fas fa-align-left"></i> Description
-            </span>
-          </div>
-
-          <!-- Search Status -->
-          <div class="search-status" id="searchStatus">
-            <i class="fas fa-info-circle"></i>
-            <span>Type at least 2 characters to search</span>
-          </div>
         </div>
-      </div>
     </section>
 
-    <!-- ========== SORT & FILTER SECTION ========== -->
+    <!-- Sort & Filter Section -->
     <section class="sort-filter-section">
-      <div class="container">
-        <div class="sort-filter-wrapper">
-          <!-- Sort By Dropdown -->
-          <div class="sort-container">
-            <label for="sortProducts">Sort by:</label>
-            <select id="sortProducts" class="sort-select">
-              <option value="default">Default</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="rating">Rating: High to Low</option>
-              <option value="name-asc">Name: A to Z</option>
-              <option value="name-desc">Name: Z to A</option>
-            </select>
-          </div>
-
-          <!-- Price Filter -->
-          <div class="filter-container">
-            <span class="filter-label">Price Range:</span>
-            <div class="price-inputs">
-              <input 
-                type="number" 
-                id="minPrice" 
-                class="price-input" 
-                placeholder="Min ₹"
-                min="0"
-              >
-              <span class="price-separator">-</span>
-              <input 
-                type="number" 
-                id="maxPrice" 
-                class="price-input" 
-                placeholder="Max ₹"
-                min="0"
-              >
-              <button id="applyPriceFilter" class="filter-btn">Apply</button>
-              <button id="clearFilter" class="clear-btn">Clear</button>
+        <div class="container">
+            <div class="sort-filter-wrapper">
+                <div class="sort-container">
+                    <label for="sortProducts">Sort by:</label>
+                    <select id="sortProducts" class="sort-select">
+                        <option value="default">Default</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="rating">Rating: High to Low</option>
+                        <option value="name-asc">Name: A to Z</option>
+                        <option value="name-desc">Name: Z to A</option>
+                    </select>
+                </div>
+                <div class="filter-container">
+                    <span class="filter-label">Price Range:</span>
+                    <div class="price-inputs">
+                        <input type="number" id="minPrice" class="price-input" placeholder="Min ₹" min="0">
+                        <span class="price-separator">-</span>
+                        <input type="number" id="maxPrice" class="price-input" placeholder="Max ₹" min="0">
+                        <button id="applyPriceFilter" class="filter-btn">Apply</button>
+                        <button id="clearFilter" class="clear-btn">Clear</button>
+                    </div>
+                </div>
             </div>
-          </div>
+            <div class="active-filters" id="activeFilters"></div>
         </div>
-
-        <!-- Active Filters Display -->
-        <div class="active-filters" id="activeFilters"></div>
-      </div>
     </section>
     
-    <!-- Category Filter Bar -->
+    <!-- Category Filter Bar - SCROLLABLE VERSION -->
     <section class="category-filter-bar">
-      <div class="container">
-        <div class="filter-header">
-          <h2 class="section-common--heading" id="categoryTitle">All Products</h2>
-          <span class="product-count" id="productCount">30 Products</span>
+        <div class="container">
+            <div class="filter-header">
+                <h2 class="section-common--heading" id="categoryTitle">Shop by Category</h2>
+                <span class="product-count" id="productCount">30 Products</span>
+            </div>
+            
+            <div class="category-chips-container">
+                <!-- Left Scroll Arrow -->
+                <div class="scroll-arrow left" onclick="scrollCategories('left')">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+
+                <!-- Scrollable Categories Container -->
+                <div class="category-chips" id="categoryChips">
+                    <!-- All Categories -->
+                    <a href="products.html" class="category-chip active">All</a>
+                    
+                    <!-- Electronics & Tech -->
+                    <a href="?category=electronics" class="category-chip electronics"><i class="fas fa-mobile-alt"></i> Electronics</a>
+                    <a href="?category=phones" class="category-chip phones"><i class="fas fa-phone"></i> Mobile Phones</a>
+                    <a href="?category=computers" class="category-chip computers"><i class="fas fa-laptop"></i> Computers</a>
+                    <a href="?category=tablets" class="category-chip electronics"><i class="fas fa-tablet-alt"></i> Tablets</a>
+                    <a href="?category=cameras" class="category-chip cameras"><i class="fas fa-camera"></i> Cameras</a>
+                    <a href="?category=audio" class="category-chip electronics"><i class="fas fa-headphones"></i> Audio</a>
+                    <a href="?category=wearables" class="category-chip electronics"><i class="fas fa-watch"></i> Wearables</a>
+                    <a href="?category=accessories" class="category-chip electronics"><i class="fas fa-usb"></i> Accessories</a>
+                    
+                    <!-- Fashion -->
+                    <a href="?category=clothing" class="category-chip clothing"><i class="fas fa-tshirt"></i> Clothing</a>
+                    <a href="?category=men" class="category-chip clothing"><i class="fas fa-male"></i> Men's Fashion</a>
+                    <a href="?category=women" class="category-chip clothing"><i class="fas fa-female"></i> Women's Fashion</a>
+                    <a href="?category=kids" class="category-chip clothing"><i class="fas fa-child"></i> Kids' Fashion</a>
+                    <a href="?category=shoes" class="category-chip shoes"><i class="fas fa-shoe-prints"></i> Shoes</a>
+                    <a href="?category=watches" class="category-chip watches"><i class="fas fa-clock"></i> Watches</a>
+                    <a href="?category=jewelry" class="category-chip jewelry"><i class="fas fa-gem"></i> Jewelry</a>
+                    <a href="?category=bags" class="category-chip bags"><i class="fas fa-shopping-bag"></i> Bags</a>
+                    <a href="?category=sunglasses" class="category-chip accessories"><i class="fas fa-sun"></i> Sunglasses</a>
+                    
+                    <!-- Home & Living -->
+                    <a href="?category=furniture" class="category-chip furniture"><i class="fas fa-couch"></i> Furniture</a>
+                    <a href="?category=home" class="category-chip home"><i class="fas fa-home"></i> Home Decor</a>
+                    <a href="?category=kitchen" class="category-chip kitchen"><i class="fas fa-utensils"></i> Kitchen</a>
+                    <a href="?category=garden" class="category-chip garden"><i class="fas fa-seedling"></i> Garden</a>
+                    <a href="?category=lighting" class="category-chip home"><i class="fas fa-lightbulb"></i> Lighting</a>
+                    <a href="?category=bath" class="category-chip home"><i class="fas fa-bath"></i> Bath</a>
+                    <a href="?category=bedding" class="category-chip home"><i class="fas fa-bed"></i> Bedding</a>
+                    
+                    <!-- Sports & Outdoors -->
+                    <a href="?category=sports" class="category-chip sports"><i class="fas fa-futbol"></i> Sports</a>
+                    <a href="?category=gym" class="category-chip sports"><i class="fas fa-dumbbell"></i> Gym & Fitness</a>
+                    <a href="?category=camping" class="category-chip sports"><i class="fas fa-campground"></i> Camping</a>
+                    <a href="?category=cycling" class="category-chip sports"><i class="fas fa-bicycle"></i> Cycling</a>
+                    <a href="?category=outdoor" class="category-chip sports"><i class="fas fa-tree"></i> Outdoor</a>
+                    
+                    <!-- Books & Media -->
+                    <a href="?category=books" class="category-chip books"><i class="fas fa-book"></i> Books</a>
+                    <a href="?category=ebooks" class="category-chip books"><i class="fas fa-book-open"></i> eBooks</a>
+                    <a href="?category=audiobooks" class="category-chip books"><i class="fas fa-headphones"></i> Audiobooks</a>
+                    <a href="?category=magazines" class="category-chip books"><i class="fas fa-newspaper"></i> Magazines</a>
+                    <a href="?category=music" class="category-chip music"><i class="fas fa-music"></i> Music</a>
+                    <a href="?category=movies" class="category-chip music"><i class="fas fa-film"></i> Movies</a>
+                    <a href="?category=gaming" class="category-chip gaming"><i class="fas fa-gamepad"></i> Gaming</a>
+                    
+                    <!-- Beauty & Health -->
+                    <a href="?category=beauty" class="category-chip beauty"><i class="fas fa-spa"></i> Beauty</a>
+                    <a href="?category=skincare" class="category-chip beauty"><i class="fas fa-hand-sparkles"></i> Skincare</a>
+                    <a href="?category=makeup" class="category-chip beauty"><i class="fas fa-paint-brush"></i> Makeup</a>
+                    <a href="?category=fragrance" class="category-chip beauty"><i class="fas fa-spray-can"></i> Fragrance</a>
+                    <a href="?category=health" class="category-chip health"><i class="fas fa-heartbeat"></i> Health</a>
+                    <a href="?category=wellness" class="category-chip health"><i class="fas fa-leaf"></i> Wellness</a>
+                    <a href="?category=personal-care" class="category-chip health"><i class="fas fa-hand-holding-heart"></i> Personal Care</a>
+                    
+                    <!-- Groceries & Essentials -->
+                    <a href="?category=groceries" class="category-chip groceries"><i class="fas fa-apple-alt"></i> Groceries</a>
+                    <a href="?category=beverages" class="category-chip groceries"><i class="fas fa-coffee"></i> Beverages</a>
+                    <a href="?category=snacks" class="category-chip groceries"><i class="fas fa-cookie"></i> Snacks</a>
+                    <a href="?category=organic" class="category-chip groceries"><i class="fas fa-seedling"></i> Organic</a>
+                    
+                    <!-- Automotive -->
+                    <a href="?category=automotive" class="category-chip automotive"><i class="fas fa-car"></i> Automotive</a>
+                    <a href="?category=car-parts" class="category-chip automotive"><i class="fas fa-tools"></i> Car Parts</a>
+                    <a href="?category=car-accessories" class="category-chip automotive"><i class="fas fa-car-side"></i> Car Accessories</a>
+                    <a href="?category=motorcycle" class="category-chip automotive"><i class="fas fa-motorcycle"></i> Motorcycle</a>
+                    
+                    <!-- Kids & Baby -->
+                    <a href="?category=baby" class="category-chip baby"><i class="fas fa-baby"></i> Baby Products</a>
+                    <a href="?category=toys" class="category-chip toys"><i class="fas fa-robot"></i> Toys</a>
+                    <a href="?category=kids-furniture" class="category-chip furniture"><i class="fas fa-couch"></i> Kids Furniture</a>
+                    
+                    <!-- Pet Supplies -->
+                    <a href="?category=pet" class="category-chip pet"><i class="fas fa-dog"></i> Pet Supplies</a>
+                    <a href="?category=dog" class="category-chip pet"><i class="fas fa-dog"></i> Dogs</a>
+                    <a href="?category=cat" class="category-chip pet"><i class="fas fa-cat"></i> Cats</a>
+                    <a href="?category=fish" class="category-chip pet"><i class="fas fa-fish"></i> Fish</a>
+                    <a href="?category=bird" class="category-chip pet"><i class="fas fa-crow"></i> Birds</a>
+                    
+                    <!-- Office & Stationery -->
+                    <a href="?category=office" class="category-chip office"><i class="fas fa-print"></i> Office Supplies</a>
+                    <a href="?category=stationery" class="category-chip office"><i class="fas fa-pen"></i> Stationery</a>
+                    <a href="?category=art" class="category-chip office"><i class="fas fa-paint-brush"></i> Art Supplies</a>
+                    
+                    <!-- Special Categories -->
+                    <a href="?category=handmade" class="category-chip crafts"><i class="fas fa-hands"></i> Handmade</a>
+                    <a href="?category=eco-friendly" class="category-chip garden"><i class="fas fa-leaf"></i> Eco-Friendly</a>
+                    <a href="?category=vintage" class="category-chip vintage"><i class="fas fa-clock"></i> Vintage</a>
+                    <a href="?category=collectibles" class="category-chip collectibles"><i class="fas fa-star"></i> Collectibles</a>
+                    <a href="?category=gift-cards" class="category-chip gift"><i class="fas fa-gift"></i> Gift Cards</a>
+                </div>
+
+                <!-- Right Scroll Arrow -->
+                <div class="scroll-arrow right" onclick="scrollCategories('right')">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
         </div>
-        
-        <div class="category-chips">
-          <a href="products.html" class="category-chip">All</a>
-          <a href="?category=electronics" class="category-chip">Electronics</a>
-          <a href="?category=clothing" class="category-chip">Clothing</a>
-          <a href="?category=sports" class="category-chip">Sports</a>
-          <a href="?category=home-appliances" class="category-chip">Home Appliances</a>
-          <a href="?category=books" class="category-chip">Books</a>
-          <a href="?category=beauty" class="category-chip">Beauty</a>
-          <a href="?category=toys" class="category-chip">Toys</a>
-          <a href="?category=automotive" class="category-chip">Automotive</a>
-          <a href="?category=groceries" class="category-chip">Groceries</a>
-          <a href="?category=furniture" class="category-chip">Furniture</a>
-        </div>
-      </div>
     </section>
 
     <!-- Products Section -->
     <section class="section-products">
-      <div class="container">
-        <div id="productContainer" class="products-grid">
-          <!-- Products will be dynamically inserted here -->
+        <div class="container">
+            <div id="productContainer" class="products-grid">
+                <!-- Products will be dynamically inserted here -->
+            </div>
         </div>
-      </div>
     </section>
 
     <!-- Product Template -->
     <template id="productTemplate">
-      <div class="cards" id="cardValue">
-        <article class="information">
-          <div class="product-badge">
-            <span class="discount-badge"></span>
-          </div>
-          <span class="category"></span>
-          <div class="imageContainer">
-            <img class="productImage" src="" alt="" loading="lazy" />
-          </div>
-          <h2 class="productName"></h2>
-          <div class="productBrand"></div>
-
-          <div class="productRating"></div>
-
-          <p class="productDescription"></p>
-
-          <div class="productPriceElement">
-            <p class="productPrice"></p>
-            <p class="productActualPrice"></p>
-          </div>
-
-          <div class="productStockElement">
-            <p class="productProperty">Stock:</p>
-            <p class="productStock"></p>
-          </div>
-
-          <div class="productQuantityElement">
-            <p class="productProperty">Quantity:</p>
-            <div class="stockElement">
-              <button class="cartIncrement">+</button>
-              <p class="productQuantity">1</p>
-              <button class="cartDecrement">-</button>
-            </div>
-          </div>
-
-          <button class="add-to-cart-button">
-            <i class="fa-solid fa-cart-shopping"></i> Add to Cart
-          </button>
-        </article>
-      </div>
+        <div class="cards" id="cardValue">
+            <article class="information">
+                <div class="product-badge">
+                    <span class="discount-badge"></span>
+                </div>
+                <span class="category"></span>
+                <div class="imageContainer">
+                    <img class="productImage" src="" alt="" loading="lazy" />
+                </div>
+                <h2 class="productName"></h2>
+                <div class="productBrand"></div>
+                <div class="productRating"></div>
+                <p class="productDescription"></p>
+                <div class="productPriceElement">
+                    <p class="productPrice"></p>
+                    <p class="productActualPrice"></p>
+                </div>
+                <div class="productStockElement">
+                    <p class="productProperty">Stock:</p>
+                    <p class="productStock"></p>
+                </div>
+                <div class="productQuantityElement">
+                    <p class="productProperty">Quantity:</p>
+                    <div class="stockElement">
+                        <button class="cartIncrement">+</button>
+                        <p class="productQuantity">1</p>
+                        <button class="cartDecrement">-</button>
+                    </div>
+                </div>
+                <button class="add-to-cart-button">
+                    <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                </button>
+            </article>
+        </div>
     </template>
 
     <!-- Footer -->
     <footer class="section-footer"></footer>
 
-    <!-- Scripts - CORRECT PATHS -->
+    <!-- Scripts -->
     <script type="module" src="./src/pages/products.js"></script>
     <script type="module" src="./src/utils/auth-status.js"></script>
     <script type="module" src="./src/components/Footer.js"></script>
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
     <script>
-      AOS.init({
-        duration: 800,
-        once: true,
-        offset: 100
-      });
-      
-      // Highlight active category chip
-      document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const category = urlParams.get('category');
-        
-        document.querySelectorAll('.category-chip').forEach(chip => {
-          chip.classList.remove('active');
-          
-          if (!category && chip.getAttribute('href') === 'products.html') {
-            chip.classList.add('active');
-          } else if (category && chip.getAttribute('href') === `?category=${category}`) {
-            chip.classList.add('active');
-          }
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
         });
-      });
+
+        // Scroll categories left/right
+        function scrollCategories(direction) {
+            const container = document.getElementById('categoryChips');
+            const scrollAmount = 300;
+            
+            if (direction === 'left') {
+                container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            } else {
+                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+        }
+        
+        // Highlight active category chip
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const category = urlParams.get('category');
+            
+            document.querySelectorAll('.category-chip').forEach(chip => {
+                chip.classList.remove('active');
+                
+                if (!category && chip.getAttribute('href') === 'products.html') {
+                    chip.classList.add('active');
+                } else if (category && chip.getAttribute('href') === `?category=${category}`) {
+                    chip.classList.add('active');
+                }
+            });
+            
+            // Update product count based on URL
+            const productCount = document.getElementById('productCount');
+            if (category) {
+                const categoryName = category.split('-').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+                document.getElementById('categoryTitle').textContent = categoryName;
+            } else {
+                document.getElementById('categoryTitle').textContent = 'All Products';
+            }
+        });
     </script>
-  </body>
+</body>
 </html>

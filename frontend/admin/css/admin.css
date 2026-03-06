@@ -1,11 +1,14 @@
-/* admin/css/admin.css - Ocean Breeze Theme (Refined) */
+/* admin/css/admin.css - Amazon-Inspired Theme */
 :root {
-    /* Ocean Breeze Palette */
-    --deep-teal: #1A535C;
-    --soft-mint: #4ECDC4;
-    --coral-accent: #FF6B6B;
-    --off-white: #F7FFF7;
-    
+    /* Amazon Color Palette */
+    --dark-navy: #131921;
+    --dark-blue: #232F3E;
+    --white: #FFFFFF;
+    --orange: #FF9900;
+    --dark-orange: #E47911;
+    --dark-gray: #111111;
+    --light-gray: #F3F4F6;
+
     /* Neutral Colors */
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
@@ -18,40 +21,41 @@
     --gray-800: #1f2937;
     --gray-900: #111827;
 
-    /* Semantic Colors */
-    --primary: var(--deep-teal);
-    --primary-light: #236973;
-    --primary-dark: #0f3a40;
-    --accent: var(--coral-accent);
-    --accent-light: #ff8585;
-    --accent-dark: #f04f4f;
+    /* Semantic Colors - Amazon Inspired */
+    --primary: var(--dark-navy);
+    --primary-light: #1a2634;
+    --primary-dark: #0f1a2b;
+    --accent: var(--orange);
+    --accent-light: #ffad33;
+    --accent-dark: var(--dark-orange);
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
-    --info: var(--soft-mint);
+    --info: var(--orange);
 
     /* UI Backgrounds */
     --bg-body: var(--gray-50);
-    --bg-sidebar: var(--primary);
-    --bg-card: #ffffff;
-    --bg-input: #ffffff;
+    --bg-sidebar: var(--dark-navy);
+    --bg-card: var(--white);
+    --bg-input: var(--white);
 
     /* Text Colors */
-    --text-primary: var(--gray-900);
+    --text-primary: var(--dark-gray);
     --text-secondary: var(--gray-600);
     --text-muted: var(--gray-500);
-    --text-inverse: var(--off-white);
-    --text-sidebar: rgba(247, 255, 247, 0.9);
+    --text-inverse: var(--white);
+    --text-sidebar: rgba(255, 255, 255, 0.9);
 
     /* Borders */
     --border-color: var(--gray-200);
-    --border-focus: var(--soft-mint);
+    --border-focus: var(--orange);
 
     /* Shadows - Simplified */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-orange: 0 4px 12px rgba(255, 153, 0, 0.2);
 
     /* Border Radius - Normalized */
     --radius-sm: 4px;
@@ -104,12 +108,12 @@ body {
 .sidebar-header h2 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: white;
+    color: var(--white);
     margin-bottom: 4px;
 }
 
 .sidebar-header h2 span {
-    color: var(--soft-mint);
+    color: var(--orange);
     font-weight: 700;
 }
 
@@ -129,7 +133,7 @@ body {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--soft-mint);
+    color: var(--orange);
     opacity: 0.8;
 }
 
@@ -152,13 +156,13 @@ body {
 }
 
 .sidebar-menu a:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: var(--dark-blue);
+    color: var(--white);
 }
 
 .sidebar-menu a.active {
-    background: var(--coral-accent);
-    color: white;
+    background: var(--orange);
+    color: var(--white);
     font-weight: 500;
 }
 
@@ -172,7 +176,7 @@ body {
 
 /* ===== TOP BAR ===== */
 .top-bar {
-    background: white;
+    background: var(--white);
     padding: 16px 24px;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
@@ -215,7 +219,7 @@ body {
 }
 
 .user-info i:hover {
-    color: var(--coral-accent);
+    color: var(--orange);
 }
 
 /* ===== STATS CARDS ===== */
@@ -227,7 +231,7 @@ body {
 }
 
 .stat-card {
-    background: white;
+    background: var(--white);
     padding: 20px;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
@@ -239,8 +243,9 @@ body {
 }
 
 .stat-card:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--gray-300);
+    box-shadow: var(--shadow-orange);
+    border-color: var(--orange);
+    transform: translateY(-2px);
 }
 
 .stat-info h3 {
@@ -268,14 +273,14 @@ body {
     font-size: 1.25rem;
 }
 
-.stat-icon.products { background: var(--soft-mint); color: var(--primary); }
-.stat-icon.orders { background: var(--coral-accent); }
-.stat-icon.users { background: var(--deep-teal); }
-.stat-icon.revenue { background: var(--primary); }
+.stat-icon.products { background: var(--orange); color: var(--white); }
+.stat-icon.orders { background: var(--dark-blue); color: var(--white); }
+.stat-icon.users { background: var(--dark-navy); color: var(--white); }
+.stat-icon.revenue { background: var(--dark-orange); color: var(--white); }
 
 /* ===== CARDS ===== */
 .card {
-    background: white;
+    background: var(--white);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     padding: 24px;
@@ -302,7 +307,7 @@ body {
 }
 
 .card-header h2 i {
-    color: var(--deep-teal);
+    color: var(--orange);
 }
 
 /* ===== BUTTONS ===== */
@@ -319,7 +324,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: white;
+    background: var(--white);
     color: var(--text-primary);
     border-color: var(--border-color);
 }
@@ -330,19 +335,20 @@ body {
 }
 
 .btn-primary {
-    background: var(--deep-teal);
-    color: white;
-    border-color: var(--deep-teal);
+    background: var(--orange);
+    color: var(--white);
+    border-color: var(--orange);
 }
 
 .btn-primary:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
+    background: var(--dark-orange);
+    border-color: var(--dark-orange);
+    box-shadow: var(--shadow-orange);
 }
 
 .btn-success {
     background: var(--success);
-    color: white;
+    color: var(--white);
     border-color: var(--success);
 }
 
@@ -352,7 +358,7 @@ body {
 
 .btn-warning {
     background: var(--warning);
-    color: white;
+    color: var(--white);
     border-color: var(--warning);
 }
 
@@ -362,7 +368,7 @@ body {
 
 .btn-danger {
     background: var(--danger);
-    color: white;
+    color: var(--white);
     border-color: var(--danger);
 }
 
@@ -474,13 +480,13 @@ tr:hover td {
 }
 
 .form-control:hover {
-    border-color: var(--gray-400);
+    border-color: var(--orange);
 }
 
 .form-control:focus {
     outline: none;
-    border-color: var(--soft-mint);
-    box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.1);
 }
 
 .form-control:disabled {
@@ -522,7 +528,7 @@ textarea.form-control {
 }
 
 .modal-content {
-    background: white;
+    background: var(--white);
     padding: 24px;
     border-radius: var(--radius-md);
     width: 90%;
@@ -573,7 +579,7 @@ textarea.form-control {
 .loading i {
     font-size: 2rem;
     margin-bottom: 12px;
-    color: var(--deep-teal);
+    color: var(--orange);
 }
 
 /* ===== ALERTS ===== */
@@ -625,6 +631,25 @@ textarea.form-control {
     animation: spin 1s linear infinite;
 }
 
+/* ===== CUSTOM SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--orange);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dark-orange);
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
     .sidebar {
@@ -673,4 +698,49 @@ textarea.form-control {
         margin: 0 -16px;
         width: calc(100% + 32px);
     }
+}
+
+/* ===== ADDITIONAL AMAZON STYLE TOUCHES ===== */
+.btn-primary {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn-primary:hover::after {
+    width: 300px;
+    height: 300px;
+}
+
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--orange);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.stat-card:hover::after {
+    opacity: 1;
 }
