@@ -3,7 +3,7 @@ const footerHTML = `
     <div class="footer-top-border"></div>
     
     <div class="footer-container container">
-      <!-- Brand Section - Like ZainHub -->
+  
       <div class="footer-section brand-section">
         <a href="index.html" class="text-logo floating">
           Ease<span>Shop</span>
