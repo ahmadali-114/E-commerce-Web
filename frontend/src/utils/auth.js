@@ -1,6 +1,6 @@
 // frontend/src/utils/auth.js – Backend API authentication with JWT
 
-const API_URL = 'http://localhost:5000/api'; // ✅ MUST include /api
+const API_URL = '/api'; // ✅ MUST include /api
 const AUTH_URL = `${API_URL}/auth`;
 
 // ========== HELPER FUNCTIONS ==========

@@ -16,8 +16,11 @@ class Product {
       params.push(term, term, term);
     }
 
-    sql += ' ORDER BY id DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
+    // Use numeric limit/offset inserted into SQL (avoids prepared-statement issues)
+    const limitNum = Number.parseInt(limit) || 10;
+    const offsetNum = Number.parseInt(offset) || 0;
+    sql += ' ORDER BY id DESC';
+    sql += ` LIMIT ${limitNum} OFFSET ${offsetNum}`;
 
     const products = await query(sql, params);
 
@@ -38,7 +41,7 @@ class Product {
     return {
       products,
       page: parseInt(page),
-      pages: Math.ceil(totalResult.total / limit),
+      pages: Math.ceil(totalResult.total / limitNum),
       total: totalResult.total
     };
   }

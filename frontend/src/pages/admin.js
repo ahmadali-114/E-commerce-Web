@@ -5,7 +5,7 @@ if (!isLoggedIn()) {
   window.location.href = 'login.html';
 }
 
-const API_URL = 'http://localhost:5000/api/admin';
+const API_URL = '/api/admin';
 
 // Helper for fetch with auth
 async function fetchWithAuth(endpoint, options = {}) {

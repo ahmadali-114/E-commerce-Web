@@ -6,7 +6,7 @@ import { isLoggedIn, getCurrentUser, getToken } from '../utils/auth.js';
 console.log("🔍 PRODUCT DETAILS PAGE LOADED");
 
 // ========== REVIEWS API FUNCTIONS ==========
-const API_URL = 'http://localhost:5000/api';
+const API_URL = '/api';
 
 // Fetch reviews for a product
 async function fetchReviews(productId) {

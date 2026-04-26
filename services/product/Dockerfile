@@ -4,7 +4,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production
+# Use npm ci with lockfile else fall back to installing prod deps
+RUN if [ -f package-lock.json ]; then npm ci --only=production; else npm install --omit=dev; fi
 
 COPY . .
 

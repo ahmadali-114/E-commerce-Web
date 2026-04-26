@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MySQL Database
   mysql:
@@ -10,8 +8,6 @@ services:
       MYSQL_ROOT_PASSWORD: ""          # empty password (change as needed)
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: easeshop
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql   # optional, if you have schema.sql
@@ -126,21 +122,33 @@ services:
     networks:
       - easeshop-net
 
+  # Frontend Service (builds production assets and serves them internally)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: easeshop-frontend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    networks:
+      - easeshop-net
+
   # API Gateway
   gateway:
     build: ./gateway
     container_name: easeshop-gateway
     restart: unless-stopped
-    environment:
-      PORT: 5000
+    # Gateway listens on host port 80 and proxies /api/* to backend services
     ports:
-      - "5000:5000"     # frontend will use localhost:5000
+      - "80:80"
     depends_on:
       - auth
       - product
       - order
       - user
       - admin
+      - frontend
     networks:
       - easeshop-net
 

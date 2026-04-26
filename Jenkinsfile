@@ -1,162 +1,131 @@
 pipeline {
-    agent any
+  agent any
 
-    environment {
-        // Docker registry credentials (adjust to your registry)
-        DOCKER_REGISTRY = 'docker.io'
-        DOCKER_CREDENTIALS = credentials('docker-hub-credentials')
-        
-        // Image tags
-        FRONTEND_IMAGE = "${DOCKER_REGISTRY}/yourusername/easeshop-frontend:${BUILD_NUMBER}"
-        BACKEND_IMAGE = "${DOCKER_REGISTRY}/yourusername/easeshop-backend:${BUILD_NUMBER}"
-        
-        // Database environment for tests (if needed)
-        DB_HOST = 'localhost'
-        DB_USER = 'root'
-        DB_PASSWORD = 'rootpassword'
-        DB_NAME = 'easeshop_test'
+  // Simple environment variables you can customize
+  environment {
+    // Docker image name (change to your registry/name)
+    IMAGE_NAME = "easeshop"
+    // Optional: registry host (leave empty to skip push stage)
+    REGISTRY = ""
+    // Jenkins credentials id for Docker registry (optional)
+    DOCKER_CREDENTIALS_ID = "docker-credentials-id"
+    // Developer email for failure notifications
+    DEV_EMAIL = "example@email.com"
+  }
+
+  stages {
+
+    stage('Clone (checkout)') {
+      steps {
+        // Clone code from the Git repository configured on the Jenkins job
+        // For multibranch pipeline jobs, `checkout scm` will use the branch automatically
+        echo "Checking out source code..."
+        checkout scm
+      }
     }
 
-    stages {
-        stage('Checkout') {
-            parallel {
-                stage('Checkout Frontend') {
-                    steps {
-                        checkout([
-                            $class: 'GitSCM',
-                            branches: [[name: '*/main']],
-                            userRemoteConfigs: [[url: 'https://github.com/binishfaq/E-commerce-Website-Frontend.git']],
-                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'frontend']]
-                        ])
-                    }
-                }
-                stage('Checkout Backend') {
-                    steps {
-                        checkout([
-                            $class: 'GitSCM',
-                            branches: [[name: '*/main']],
-                            userRemoteConfigs: [[url: 'https://github.com/binishfaq/E-commerce-Website-Backend.git']],
-                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'backend']]
-                        ])
-                    }
-                }
-            }
-        }
+    stage('Build (install & frontend)') {
+      steps {
+        // Install dependencies and build the frontend (if present).
+        // This is a simple, beginner-friendly approach — adjust per-service as needed.
+        sh '''
+          echo "Installing root deps if package.json exists..."
+          if [ -f package.json ]; then
+            npm ci || npm install
+          fi
 
-        stage('Install Dependencies') {
-            parallel {
-                stage('Frontend Dependencies') {
-                    steps {
-                        dir('frontend') {
-                            sh 'npm install'
-                        }
-                    }
-                }
-                stage('Backend Dependencies') {
-                    steps {
-                        dir('backend') {
-                            sh 'npm install'
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Run Tests') {
-            parallel {
-                stage('Frontend Tests') {
-                    steps {
-                        dir('frontend') {
-                            // Add your frontend test command here (if any)
-                            // sh 'npm test'
-                            echo 'No frontend tests configured.'
-                        }
-                    }
-                }
-                stage('Backend Tests') {
-                    steps {
-                        dir('backend') {
-                            // Add your backend test command here (if any)
-                            // For example, use a test database
-                            // sh 'npm test'
-                            echo 'No backend tests configured.'
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir('frontend') {
-                    sh 'npm run build'
-                }
-            }
-        }
-
-        stage('Build Docker Images') {
-            parallel {
-                stage('Build Frontend Image') {
-                    steps {
-                        dir('frontend') {
-                            sh """
-                                docker build -t ${FRONTEND_IMAGE} .
-                            """
-                        }
-                    }
-                }
-                stage('Build Backend Image') {
-                    steps {
-                        dir('backend') {
-                            sh """
-                                docker build -t ${BACKEND_IMAGE} .
-                            """
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Push Docker Images') {
-            steps {
-                script {
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-hub-credentials') {
-                        docker.image(FRONTEND_IMAGE).push()
-                        docker.image(BACKEND_IMAGE).push()
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Production') {
-            when {
-                branch 'main'  // Deploy only when building main branch
-            }
-            steps {
-                // Add your deployment steps here (e.g., kubectl, ssh, docker-compose)
-                echo "Deploying to production..."
-                // Example using docker-compose on a remote server:
-                // sh """
-                //   scp docker-compose.prod.yml user@server:/opt/easeshop/
-                //   ssh user@server "cd /opt/easeshop && docker-compose -f docker-compose.prod.yml pull && docker-compose -f docker-compose.prod.yml up -d"
-                // """
-            }
-        }
+          # Build frontend (Vite) if frontend folder exists
+          if [ -d frontend ]; then
+            echo "Building frontend..."
+            cd frontend
+            npm ci || npm install
+            npm run build || echo "No frontend build script defined"
+            cd -
+          fi
+        '''
+      }
     }
 
-    post {
-        always {
-            // Clean up Docker images to save space (optional)
-            sh """
-                docker rmi ${FRONTEND_IMAGE} || true
-                docker rmi ${BACKEND_IMAGE} || true
-            """
-        }
-        success {
-            echo 'Pipeline succeeded!'
-        }
-        failure {
-            echo 'Pipeline failed!'
-        }
+    stage('Test') {
+      steps {
+        // Run tests if a test script is defined. If no tests exist this will be a no-op.
+        sh '''
+          echo "Running tests if available..."
+          if [ -f package.json ] && grep -q '"test"' package.json; then
+            npm test || (echo "Tests failed" && exit 1)
+          else
+            echo "No root tests found. Add tests or customize this stage to run service tests."
+          fi
+        '''
+      }
     }
+
+    stage('Docker Build') {
+      steps {
+        // Build Docker image(s). Use docker-compose if present, otherwise a single docker build.
+        script {
+          // Set a simple tag: branch name if available, otherwise 'latest'
+          env.APP_TAG = env.BRANCH_NAME ?: 'latest'
+        }
+        sh '''
+          echo "Building Docker image(s)..."
+          if [ -f docker-compose.yml ]; then
+            docker-compose build --parallel
+          else
+            docker build -t ${IMAGE_NAME}:${APP_TAG} .
+          fi
+        '''
+      }
+    }
+
+    stage('Push Docker Image (optional)') {
+      // This stage only runs when you set REGISTRY to a non-empty value
+      when {
+        expression { return env.REGISTRY?.trim() }
+      }
+      steps {
+        // Login and push image to registry. Requires `DOCKER_CREDENTIALS_ID` configured in Jenkins.
+        script {
+          withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
+            sh '''
+              echo "Logging in to registry ${REGISTRY}..."
+              echo "$REG_PASS" | docker login ${REGISTRY} --username "$REG_USER" --password-stdin
+              docker tag ${IMAGE_NAME}:${APP_TAG} ${REGISTRY}/${IMAGE_NAME}:${APP_TAG}
+              docker push ${REGISTRY}/${IMAGE_NAME}:${APP_TAG}
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Deploy (docker-compose)') {
+      steps {
+        // Deploy using docker-compose on the Jenkins agent/machine.
+        // This assumes the agent has Docker and docker-compose installed and can reach any remote registry you use.
+        sh '''
+          echo "Deploying with docker-compose (if present)..."
+          if [ -f docker-compose.yml ]; then
+            # If you pushed images to a registry update the compose file or rely on docker-compose pull
+            docker-compose pull || true
+            docker-compose up -d --build
+          else
+            echo "No docker-compose.yml found in repo root. Update this step to deploy elsewhere."
+          fi
+        '''
+      }
+    }
+
+  }
+
+  post {
+    failure {
+      // Simple email notification on failure. Jenkins must be configured with an SMTP server.
+      mail to: "${DEV_EMAIL}",
+           subject: "Jenkins: Build failed in ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+           body: "Build failed.\nJob: ${env.JOB_NAME}\nBuild: ${env.BUILD_NUMBER}\nBranch: ${env.BRANCH_NAME}\nSee: ${env.BUILD_URL}"
+    }
+    always {
+      echo "Pipeline finished. Clean-up steps could be added here."
+    }
+  }
 }

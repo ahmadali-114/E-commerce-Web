@@ -38,7 +38,7 @@ const loadTrackingInfo = async () => {
     }
 
     // Fetch order from API
-    const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+    const response = await fetch(`/api/orders/${orderId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

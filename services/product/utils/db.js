@@ -13,8 +13,16 @@ const pool = mysql.createPool({
 });
 
 const query = async (sql, params = []) => {
-  const [rows] = await pool.execute(sql, params);
-  return rows;
+  try {
+    const [rows] = await pool.execute(sql, params);
+    return rows;
+  } catch (err) {
+    console.error('DB query error');
+    console.error('SQL:', sql);
+    console.error('Params:', params);
+    console.error(err);
+    throw err;
+  }
 };
 
 const getOne = async (sql, params = []) => {

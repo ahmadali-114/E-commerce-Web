@@ -20,9 +20,9 @@ export const showCategories = async () => {
   }
 
   try {
-    console.log("🟡 Fetching from API: http://localhost:5000/api/categories");
-    
-    const response = await fetch('http://localhost:5000/api/categories');
+    console.log("🟡 Fetching from API: /api/categories");
+
+    const response = await fetch('/api/categories');
     console.log("🟡 Response status:", response.status);
     
     const categories = await response.json();
@@ -40,50 +40,36 @@ export const showCategories = async () => {
 
     console.log("🟡 Starting to loop through categories");
     categories.forEach((category, index) => {
-      console.log(`🟢 Processing category ${index + 1}:`, category.name);
-      
       const categoryClone = document.importNode(categoriesTemplate.content, true);
-      console.log(`   ✅ Template cloned for ${category.name}`);
-      
+
       const card = categoryClone.querySelector(".category-card");
-      if (card) {
-        card.setAttribute("data-category-id", category.id || category.name);
-        console.log(`   ✅ Card attributes set`);
-      }
-      
+      if (card) card.setAttribute("data-category-id", category.id || category.name);
+
       const img = categoryClone.querySelector(".category-image");
       if (img) {
         img.src = category.image || 'https://via.placeholder.com/300x200?text=Category';
         img.alt = category.name;
-        console.log(`   ✅ Image set for ${category.name}`);
-      }
-      
-      const nameElem = categoryClone.querySelector(".category-name");
-      if (nameElem) {
-        nameElem.textContent = category.name.charAt(0).toUpperCase() + category.name.slice(1);
-        console.log(`   ✅ Name set to:`, nameElem.textContent);
-      }
-      
-      const descElem = categoryClone.querySelector(".category-description");
-      if (descElem) {
-        descElem.textContent = category.description || `Shop our ${category.name} collection`;
-        console.log(`   ✅ Description set`);
       }
 
-      card.addEventListener("click", () => {
-        console.log(`   👆 Clicked on ${category.name}`);
-        window.location.href = `products.html?category=${category.name}`;
-      });
-      
+      const nameElem = categoryClone.querySelector(".category-name");
+      if (nameElem) nameElem.textContent = category.name.charAt(0).toUpperCase() + category.name.slice(1);
+
+      const descElem = categoryClone.querySelector(".category-description");
+      if (descElem) descElem.textContent = category.description || `Shop our ${category.name} collection`;
+
+      if (card) {
+        card.addEventListener("click", () => {
+          window.location.href = `products.html?category=${category.name}`;
+        });
+      }
+
       categoriesContainer.appendChild(categoryClone);
-      console.log(`   ✅ Appended to container, container now has ${categoriesContainer.children.length} children`);
     });
-    
+
     console.log("✅ ALL DONE! Final container children:", categoriesContainer.children.length);
-    
   } catch (error) {
     console.error("❌ ERROR in showCategories:", error);
-    categoriesContainer.innerHTML = `<p style="color:red">Error loading categories: ${error.message}</p>`;
+    if (categoriesContainer) categoriesContainer.innerHTML = `<p style="color:red">Error loading categories: ${error.message}</p>`;
   }
 };
 

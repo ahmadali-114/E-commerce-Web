@@ -8,7 +8,7 @@ console.log("Products.js loaded");
 
 // Add this at the top of products.js after imports
 console.log("Checking API connection...");
-fetch('http://localhost:5000/api/products')
+fetch('/api/products')
   .then(res => res.json())
   .then(data => console.log("API test - products:", data))
   .catch(err => console.error("API test failed:", err));
