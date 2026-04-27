@@ -1,11 +1,6 @@
 pipeline {
   agent any
 
-  environment {
-    IMAGE_NAME = "easeshop"
-    TAG = "latest"
-  }
-
   stages {
 
     stage('Checkout Code') {
@@ -15,52 +10,74 @@ pipeline {
       }
     }
 
-    stage('Install & Build') {
+    stage('Install & Build Frontend') {
       steps {
-        echo "Installing dependencies..."
+        echo "Building frontend..."
 
         sh '''
-          if [ -f package.json ]; then
-            npm install
-          fi
-
           if [ -d frontend ]; then
             cd frontend
             npm install
-            npm run build || echo "No build script"
+            npm run build
             cd ..
           fi
         '''
       }
     }
 
-    stage('Run Tests') {
+    stage('Lint Check (Code Quality)') {
       steps {
-        echo "Running tests..."
+        echo "Checking code quality..."
 
         sh '''
           if [ -f package.json ]; then
-            npm test || echo "No tests found"
+            npm install
+            npm run lint || echo "No lint script"
           fi
         '''
       }
     }
 
-    stage('Build Docker Image') {
+    stage('Run Tests (Safe Mode)') {
       steps {
-        echo "Building Docker image..."
-        sh 'docker build -t $IMAGE_NAME:$TAG .'
+        echo "Running tests..."
+
+        sh '''
+          if grep -q '"test"' package.json; then
+            npm test || echo "Tests failed but continuing..."
+          else
+            echo "No tests found"
+          fi
+        '''
       }
     }
 
-    stage('Run Container') {
+    stage('Build & Run (Docker Compose)') {
       steps {
-        echo "Running container..."
+        echo "Deploying application..."
+
         sh '''
-          docker stop easeshop-container || true
-          docker rm easeshop-container || true
-          docker run -d -p 3000:3000 --name easeshop-container $IMAGE_NAME:$TAG
+          docker-compose down || true
+          docker-compose build
+          docker-compose up -d
         '''
+      }
+    }
+
+    stage('Health Check (IMPORTANT)') {
+      steps {
+        echo "Checking if app is running..."
+
+        sh '''
+          sleep 10
+          curl -f http://localhost || exit 1
+        '''
+      }
+    }
+
+    stage('Check Running Containers') {
+      steps {
+        sh 'docker ps'
       }
     }
 
@@ -68,10 +85,10 @@ pipeline {
 
   post {
     success {
-      echo "Pipeline executed successfully!"
+      echo "FYP Pipeline SUCCESS 🚀"
     }
     failure {
-      echo "Pipeline failed!"
+      echo "FYP Pipeline FAILED ❌"
     }
   }
 }
