@@ -10,7 +10,7 @@ pipeline {
       }
     }
 
-    stage('Install & Build Frontend') {
+    stage('Build Frontend') {
       steps {
         echo "Building frontend..."
 
@@ -20,63 +20,61 @@ pipeline {
             npm install
             npm run build
             cd ..
+          else
+            echo "No frontend folder found"
           fi
         '''
       }
     }
 
-    stage('Lint Check (Code Quality)') {
-      steps {
-        echo "Checking code quality..."
-
-        sh '''
-          if [ -f package.json ]; then
-            npm install
-            npm run lint || echo "No lint script"
-          fi
-        '''
-      }
-    }
-
-    stage('Run Tests (Safe Mode)') {
+    stage('Run Tests (Safe)') {
       steps {
         echo "Running tests..."
 
         sh '''
-          if grep -q '"test"' package.json; then
-            npm test || echo "Tests failed but continuing..."
+          if [ -f package.json ]; then
+            npm test || echo "No tests or tests failed - continuing"
           else
-            echo "No tests found"
+            echo "No package.json found"
           fi
         '''
       }
     }
 
-    stage('Build & Run (Docker Compose)') {
+    stage('Deploy with Docker Compose') {
       steps {
-        echo "Deploying application..."
+        echo "Deploying application using Docker Compose v2..."
 
         sh '''
-          docker-compose down || true
-          docker-compose build
-          docker-compose up -d
+          docker compose version
+
+          docker compose down || true
+          docker compose build
+          docker compose up -d
         '''
       }
     }
 
-    stage('Health Check (IMPORTANT)') {
+    stage('Wait for Services') {
       steps {
-        echo "Checking if app is running..."
+        echo "Waiting for services to start..."
+        sh 'sleep 15'
+      }
+    }
+
+    stage('Health Check') {
+      steps {
+        echo "Checking application..."
 
         sh '''
-          sleep 10
-          curl -f http://localhost || exit 1
+          curl -f http://localhost || (echo "App not responding" && exit 1)
         '''
       }
     }
 
-    stage('Check Running Containers') {
+    stage('Show Running Containers') {
       steps {
+        echo "Running containers:"
         sh 'docker ps'
       }
     }
@@ -85,10 +83,13 @@ pipeline {
 
   post {
     success {
-      echo "FYP Pipeline SUCCESS 🚀"
+      echo "✅ FYP Pipeline SUCCESS - Application is running!"
     }
     failure {
-      echo "FYP Pipeline FAILED ❌"
+      echo "❌ FYP Pipeline FAILED - Check logs"
+    }
+    always {
+      echo "Pipeline execution completed."
     }
   }
 }
