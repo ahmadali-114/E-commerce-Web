@@ -344,6 +344,8 @@
           const user = getCurrentUser();
           if (user) {
             document.getElementById('profileName').textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
+            document.getElementById('displayAddress').textContent = user.address || 'Not set';
+            document.getElementById('displayCity').textContent = user.city || 'Not set';
           }
           
           setTimeout(() => messageDiv.innerHTML = '', 3000);

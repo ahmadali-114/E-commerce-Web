@@ -21,6 +21,12 @@ export default defineConfig({
         profile: resolve(__dirname, "profile.html"),
         forgotPassword: resolve(__dirname, "forgot-password.html"),
         resetPassword: resolve(__dirname, "reset-password.html"),
+        // Admin pages
+        adminLogin: resolve(__dirname, "admin/index.html"),
+        adminDashboard: resolve(__dirname, "admin/dashboard.html"),
+        adminProducts: resolve(__dirname, "admin/products.html"),
+        adminOrders: resolve(__dirname, "admin/orders.html"),
+        adminUsers: resolve(__dirname, "admin/users.html"),
       },
     },
   },

@@ -82,7 +82,8 @@ class Product {
   }
 
   static async getLowStock(limit = 5) {
-    return query('SELECT * FROM products WHERE stock < 10 ORDER BY stock ASC LIMIT ?', [limit]);
+    const limitNum = Number.parseInt(limit) || 5;
+    return query(`SELECT * FROM products WHERE stock < 10 ORDER BY stock ASC LIMIT ${limitNum}`);
   }
 
   static async getTotalCount() {

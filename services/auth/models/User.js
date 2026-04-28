@@ -8,7 +8,7 @@ class User {
 
   static async findById(id) {
     return getOne(
-      'SELECT id, firstName, lastName, email, phone, isAdmin, createdAt FROM users WHERE id = ?',
+      'SELECT id, firstName, lastName, email, phone, address, city, province, postalCode, isAdmin, createdAt FROM users WHERE id = ?',
       [id]
     );
   }

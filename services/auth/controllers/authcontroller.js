@@ -103,7 +103,15 @@ const updateProfile = async (req, res) => {
       `UPDATE users 
        SET firstName = ?, lastName = ?, phone = ?, address = ?, city = ?, province = ?
        WHERE id = ?`,
-      [firstName, lastName, phone, address, city, province, req.user.id]
+      [
+        firstName ?? '', 
+        lastName ?? '', 
+        phone ?? null, 
+        address ?? null, 
+        city ?? null, 
+        province ?? null, 
+        req.user.id
+      ]
     );
 
     const updatedUser = await User.findById(req.user.id);
