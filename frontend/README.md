@@ -218,8 +218,8 @@ curl -X POST http://localhost:5000/api/auth/create-admin \
 -d '{
 "firstName":"Admin",
 "lastName":"User",
-"email":"easeshop@gmail.com",
-"password":"easeshop1212",
+"email":"admin@gmail.com",
+"password":"123456",
 "phone":"1234567890",
 "secretKey":"admin123"
 }'
@@ -273,8 +273,8 @@ Admin Panel | http://localhost:5173/admin |
 ### Admin
 
 ```
-Email: easeshop@gmail.com
-Password: easeshop1212
+Email: admin@gmail.com
+Password: 123456
 ```
 
 ---

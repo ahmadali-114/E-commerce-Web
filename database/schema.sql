@@ -149,4 +149,4 @@ INSERT IGNORE INTO products (name, brand, category, description, price, original
 ('Solid Wood Dining Table', 'IKEA', 'furniture', '6‑seater, oak finish, modern rectangular.', 29999, 39999, 25, 'https://images.pexels.com/photos/265770/pexels-photo-265770.jpeg?auto=compress&cs=tinysrgb&w=600', 4.6, 110);
 
 INSERT IGNORE INTO users (firstName, lastName, email, phone, password, isAdmin) VALUES
-('Ease', 'Shop', 'easeshop@gmail.com', '1234567890', '$2b$10$LgYQ.hFkOQwZ3u5p1kL6uBgZpLk6Mq6n5JFq0qwlX9lWqHq3lXJqW', 1);
+('Admin', 'User', 'admin@gmail.com', '1234567890', '$2b$10$NPvSmNpYwrlo6I.PsFSPYeXtAobdKnd1P4ONvO9oNi.Ij7zzZP3aO', 1);
