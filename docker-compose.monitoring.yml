@@ -37,7 +37,7 @@ services:
     container_name: easeshop-node-exporter
     restart: unless-stopped
     ports:
-      - "9100:9100"
+      - "9101:9100"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
