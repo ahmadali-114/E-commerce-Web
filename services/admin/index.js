@@ -4,18 +4,15 @@ const cors = require('cors');
 const adminRoutes = require('./routes/admin');
 const client = require('prom-client');
 
-// Create a Registry which registers the metrics
-const register = new client.Registry();
-register.setDefaultLabels({ app: 'admin-service' });
-client.collectDefaultMetrics({ register });
+// collect default system metrics
+client.collectDefaultMetrics();
 
-// Create a custom counter metric
-const httpRequestCounter = new client.Counter({
+// custom HTTP request counter
+const httpRequestsTotal = new client.Counter({
   name: 'http_requests_total',
-  help: 'Total number of HTTP requests',
-  labelNames: ['method', 'route', 'status_code'],
+  help: 'Total HTTP requests',
+  labelNames: ['method', 'route', 'status_code']
 });
-register.registerMetric(httpRequestCounter);
 
 const app = express();
 app.use(cors());
@@ -25,7 +22,11 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.on('finish', () => {
     if (req.path !== '/metrics') {
-      httpRequestCounter.labels(req.method, req.path, res.statusCode).inc();
+      httpRequestsTotal.inc({
+        method: req.method,
+        route: req.path,
+        status_code: res.statusCode
+      });
     }
   });
   next();
@@ -44,8 +45,8 @@ app.get('/health', (req, res) => res.json({ status: 'OK', service: 'admin-servic
 
 // Metrics endpoint
 app.get('/metrics', async (req, res) => {
-  res.set('Content-Type', register.contentType);
-  res.end(await register.metrics());
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
 });
 
 // 404 handler

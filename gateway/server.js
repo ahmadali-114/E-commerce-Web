@@ -6,8 +6,15 @@ const app = express();
 app.use(cors());
 
 const createProxy = (targetPort) => (req, res) => {
+  const hostnames = {
+    3001: 'easeshop-auth',
+    3002: 'easeshop-product',
+    3003: 'easeshop-order',
+    3004: 'easeshop-user',
+    3005: 'easeshop-admin'
+  };
   const options = {
-    hostname: 'localhost',
+    hostname: hostnames[targetPort] || 'localhost',
     port: targetPort,
     path: req.originalUrl,
     method: req.method,
