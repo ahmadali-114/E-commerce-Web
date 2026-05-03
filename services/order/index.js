@@ -4,6 +4,20 @@ const cors = require('cors');
 const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const { pool } = require('./utils/db');
+const client = require('prom-client');
+
+// Create a Registry which registers the metrics
+const register = new client.Registry();
+register.setDefaultLabels({ app: 'order-service' });
+client.collectDefaultMetrics({ register });
+
+// Create a custom counter metric
+const httpRequestCounter = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'],
+});
+register.registerMetric(httpRequestCounter);
 
 const app = express();
 
@@ -11,8 +25,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Middleware to count requests
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    if (req.path !== '/metrics') {
+      httpRequestCounter.labels(req.method, req.path, res.statusCode).inc();
+    }
+  });
+  next();
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', service: 'order-service' });
+});
+
+// Metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 app.use('/api/orders', orderRoutes);
