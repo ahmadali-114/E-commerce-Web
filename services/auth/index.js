@@ -3,23 +3,23 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const { pool } = require('./utils/db');
+
+const app = express();
+
+// --- METRICS START ---
 const client = require('prom-client');
-
-// collect default system metrics
 client.collectDefaultMetrics();
-
-// custom HTTP request counter
 const httpRequestsTotal = new client.Counter({
   name: 'http_requests_total',
   help: 'Total HTTP requests',
   labelNames: ['method', 'route', 'status_code']
 });
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+app.all('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
-// Middleware to count requests
 app.use((req, res, next) => {
   res.on('finish', () => {
     if (req.path !== '/metrics') {
@@ -32,6 +32,10 @@ app.use((req, res, next) => {
   });
   next();
 });
+// --- METRICS END ---
+
+app.use(cors());
+app.use(express.json());
 
 // Log all requests for debugging
 app.use((req, res, next) => {
@@ -44,12 +48,6 @@ app.use('/api/auth', authRoutes);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'OK', service: 'auth-service' }));
-
-// Metrics endpoint
-app.get('/metrics', async (req, res) => {
-  res.set('Content-Type', client.register.contentType);
-  res.end(await client.register.metrics());
-});
 
 // 404 handler
 app.use((req, res) => {
