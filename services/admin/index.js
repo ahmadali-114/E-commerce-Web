@@ -8,15 +8,16 @@ const app = express();
 // --- METRICS START ---
 const client = require('prom-client');
 
-// Initialize metrics
-const register = client.register;
+// Initialize metrics with a custom registry
+const register = new client.Registry();
 client.collectDefaultMetrics({ register });
 
-// Custom counter for HTTP requests
+// Custom counter for HTTP requests (registered to the custom registry)
 const httpRequestsTotal = new client.Counter({
   name: 'http_requests_total',
   help: 'Total HTTP requests',
-  labelNames: ['method', 'route', 'status_code']
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [register]
 });
 
 // Expose /metrics endpoint
