@@ -9,18 +9,31 @@ const app = express();
 
 // --- METRICS START ---
 const client = require('prom-client');
-client.collectDefaultMetrics();
+
+// Initialize metrics
+const register = client.register;
+client.collectDefaultMetrics({ register });
+
+// Custom counter for HTTP requests
 const httpRequestsTotal = new client.Counter({
   name: 'http_requests_total',
   help: 'Total HTTP requests',
   labelNames: ['method', 'route', 'status_code']
 });
 
-app.all('/metrics', async (req, res) => {
-  res.set('Content-Type', client.register.contentType);
-  res.end(await client.register.metrics());
+// Expose /metrics endpoint
+app.get('/metrics', async (req, res) => {
+  try {
+    console.log(`[Metrics] Scraping metrics from Product Service...`);
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (err) {
+    console.error(`[Metrics Error] Failed to generate metrics:`, err);
+    res.status(500).end(err.message);
+  }
 });
 
+// Middleware to track request metrics
 app.use((req, res, next) => {
   res.on('finish', () => {
     if (req.path !== '/metrics') {
